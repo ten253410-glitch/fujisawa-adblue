@@ -1,3 +1,4 @@
+// Legacy customer IDs identify delivery locations. Invoice aggregation uses billing_party_id.
 export type Customer = {
   id: string;
   name: string;
@@ -10,6 +11,7 @@ export type Customer = {
   active: boolean;
   version?: number;
 };
+export type DeliveryLocation = Customer;
 export type Price = {
   id: string;
   customer_id: string;
@@ -65,7 +67,16 @@ export type Audit = {
   created_at: string;
   detail: string;
 };
+export type BillingAlias = {
+  id: string;
+  customer_name: string;
+  site_name: string;
+  customer_id: string;
+  site_id: string | null;
+  billing_party_id: string;
+};
 export type Data = {
+  billingAliases?: BillingAlias[];
   customers: Customer[];
   prices: Price[];
   orders: Order[];

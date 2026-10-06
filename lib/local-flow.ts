@@ -1,5 +1,6 @@
 import { currentPrice, type Data, type Order } from "./domain";
 import { validDate } from "./order-import";
+import { migrateBillingAccounts } from "./billing-accounts";
 export const LOCAL_KEY = "fujisawa-adblue-demo-v1";
 import { validateBillingData, issuedCoverage } from "./billing";
 export type DeliverySite = {
@@ -45,7 +46,7 @@ export type LocalSale = {
   quantity_l: string;
   unit_price_excl_tax: string;
   net_amount: string;
-  billing_status: "unbilled" | "billed" | "additional";
+  billing_status: "unbilled" | "billed" | "additional" | "recalculate";
   billed_by: string | null;
   billed_at: string | null;
   billing_note: string;
@@ -219,7 +220,7 @@ export function localData(raw: unknown): Data {
   if (!raw || typeof raw !== "object" || Array.isArray(raw))
     throw new Error("保存データの形式が不正です");
   const v = raw as Data;
-  if ((v.schema_version ?? 1) > 4)
+  if ((v.schema_version ?? 1) > 5)
     throw new Error("このアプリより新しい形式です。アプリを更新してください");
   for (const key of [
     "customers",
@@ -231,7 +232,7 @@ export function localData(raw: unknown): Data {
     if (!Array.isArray(v[key])) throw new Error(`${key}の保存データが不正です`);
   const result: Data = {
     ...v,
-    schema_version: 4,
+    schema_version: v.schema_version || 4,
     local_revision: v.local_revision ?? 0,
     sites: v.sites ?? [],
     actuals: v.actuals ?? [],
@@ -447,7 +448,9 @@ export function localData(raw: unknown): Data {
       a.unit_price_excl_tax !== s.unit_price_excl_tax ||
       a.net_amount !== s.net_amount ||
       a.delivered_on !== s.delivered_on ||
-      !["unbilled", "billed", "additional"].includes(s.billing_status)
+      !["unbilled", "billed", "additional", "recalculate"].includes(
+        s.billing_status,
+      )
     )
       throw new Error("売上の関連・金額が不正です");
   }
@@ -509,13 +512,13 @@ export function localData(raw: unknown): Data {
     }
   }
   validateBillingData(result);
-  return result;
+  return migrateBillingAccounts(result);
 }
 export function backupText(data: Data) {
   return JSON.stringify(
     {
       format: "fujisawa-adblue-local",
-      version: 4,
+      version: 5,
       exported_at: new Date().toISOString(),
       data,
     },
@@ -527,7 +530,7 @@ export function parseBackup(text: string): Data {
   const parsed = JSON.parse(text);
   if (
     parsed?.format !== "fujisawa-adblue-local" ||
-    ![2, 3, 4].includes(parsed.version)
+    ![2, 3, 4, 5].includes(parsed.version)
   )
     throw new Error("藤沢AdBlueのJSONバックアップを選択してください");
   return localData(parsed.data);

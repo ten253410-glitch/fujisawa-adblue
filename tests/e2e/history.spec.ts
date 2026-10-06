@@ -48,6 +48,7 @@ test("August CSV review, monthly invoice, matching, print and restore; duplicate
   await page.getByLabel("実給液月", { exact: true }).selectOption("2026-08");
   await expect(page.locator("tbody")).toContainText("7,500");
   await expect(page.getByText("19,900 円", { exact: true })).toBeVisible();
+  await page.getByText("開発・検証用画面", { exact: true }).click();
   await page
     .getByRole("button", { name: "月次検証請求書", exact: true })
     .click();

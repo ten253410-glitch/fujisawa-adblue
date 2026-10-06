@@ -1,5 +1,6 @@
 import type { Data } from "./domain";
 import { multiplyNet, sumDecimal } from "./local-flow";
+import { additionalEligible, isInBillingMonth } from "./billing-accounts";
 import { validDate } from "./order-import";
 export type BillingParty = {
   id: string;
@@ -7,7 +8,16 @@ export type BillingParty = {
   formal_name: string;
   address: string;
   active: boolean;
+  contact?: string;
+  conditions?: string;
+  terms?: {
+    closing_day: number;
+    invoice_day: number;
+    payment_month_offset: number;
+    payment_day: number;
+  };
 };
+export type BillingAccount = BillingParty;
 export type TransactionCategory =
   "normal" | "internal" | "purchase" | "excluded";
 export type BillingItem = {
@@ -82,6 +92,9 @@ export type BillingInvoice = {
   confirmed_at?: string;
   source?: string;
   source_page?: number;
+  cancel_note?: string;
+  released_by?: string;
+  released_at?: string;
 };
 export type InvoiceIssuer = { bank: string; registration: string };
 export const defaultIssuer: InvoiceIssuer = {
@@ -123,7 +136,7 @@ export function ledger(data: Data, month: string): BillingLine[] {
   const result: BillingLine[] = [];
   for (const s of data.sales || []) {
     if (
-      !s.delivered_on.startsWith(month) ||
+      !isInBillingMonth(data, s.delivered_on, s.billing_party_id, month) ||
       (s.transaction_category && s.transaction_category !== "normal")
     )
       continue;
@@ -152,7 +165,11 @@ export function ledger(data: Data, month: string): BillingLine[] {
     });
   }
   for (const i of data.billingItems || []) {
-    if (!i.day.startsWith(month) || i.category !== "normal") continue;
+    if (
+      !isInBillingMonth(data, i.day, i.billing_party_id, month) ||
+      i.category !== "normal"
+    )
+      continue;
     result.push({
       source_id: i.id,
       source_kind: "item",
@@ -284,7 +301,7 @@ export function billingCheck(data: Data, month: string, partyId?: string) {
         source_id: l.source_id,
         blocking: !review,
       });
-    if (!validDate(l.day) || !l.day.startsWith(month))
+    if (!validDate(l.day) || !isInBillingMonth(data, l.day, party, month))
       issues.push({
         code: "date",
         message: "請求書記載日が対象月外・不正",
@@ -311,7 +328,7 @@ export function billingCheck(data: Data, month: string, partyId?: string) {
       issues.push({
         code: "omission",
         message:
-          "請求漏れ候補：数量・単価は記載、金額が小計に算入されていません",
+          "請求内容再計算が必要：原本に通常請求の数量・単価は掲載されていますが、金額欄と計算売上が一致しません",
         source_id: l.source_id,
         blocking: true,
       });
@@ -323,6 +340,22 @@ export function billingCheck(data: Data, month: string, partyId?: string) {
       issues.push({
         code: "unbilled",
         message: "未請求の売上があります。請求書への算入を確認してください",
+        source_id: l.source_id,
+        blocking: true,
+      });
+    if (
+      (data.billingInvoices || []).some(
+        (i) =>
+          i.status === "issued" &&
+          i.month === month &&
+          i.billing_party_id !== party &&
+          i.lines.some((r) => r.source_id === l.source_id),
+      )
+    )
+      issues.push({
+        code: "payer_mismatch",
+        message:
+          "原本・既発行請求の請求先と現在の売上請求先が異なります。請求内容再計算が必要です",
         source_id: l.source_id,
         blocking: true,
       });
@@ -426,7 +459,8 @@ export function makeBillingInvoice(
   const lines = ledger(data, month).filter(
     (l) =>
       lineParty(data, l) === partyId &&
-      !issuedCoverage(data, l.source_id).length,
+      !issuedCoverage(data, l.source_id).length &&
+      (kind !== "additional" || additionalEligible(data, l.source_id, partyId)),
   );
   if (!lines.length) throw new Error("未請求の売上がありません");
   if (
@@ -447,7 +481,9 @@ export function makeBillingInvoice(
         i.billing_party_id === partyId,
     )
   )
-    throw new Error("既発行分があります。追加請求として作成してください");
+    throw new Error(
+      "既発行分があります。紐付け・原本差異は請求内容再計算が必要です。追加請求は正式確定後に追加された明細だけが対象です",
+    );
   const net = sumDecimal(lines.map((l) => l.amount || "0")),
     tax = taxAmounts(net, rule),
     issuer = data.invoiceIssuer || defaultIssuer,
@@ -514,7 +550,13 @@ export function confirmBillingInvoice(
       (!i.source_id || included.has(i.source_id)) &&
       !(
         (i.code === "unbilled" ||
-          (i.code === "omission" && invoice.kind === "additional")) &&
+          (i.code === "omission" &&
+            invoice.kind === "additional" &&
+            additionalEligible(
+              data,
+              i.source_id || "",
+              invoice.billing_party_id,
+            ))) &&
         included.has(i.source_id || "")
       ),
   );
@@ -572,9 +614,11 @@ export function markAdditional(data: Data, ids: string[], actor: string): Data {
           s.id === id &&
           (!s.transaction_category || s.transaction_category === "normal"),
       ) ||
-      issuedCoverage(data, id).length
+      !additionalEligible(data, id)
     )
-      throw new Error("請求済み・対象外の明細は追加請求にできません");
+      throw new Error(
+        "追加請求は、その月の請求を正式確定した後に追加された明細だけです。既存明細は請求内容再計算が必要です",
+      );
   return {
     ...data,
     sales: (data.sales || []).map((s) =>
@@ -599,6 +643,24 @@ export function validateBillingData(data: Data) {
       list.some((v) => !v || typeof v.id !== "string")
     )
       throw new Error("請求データのIDが不正です");
+  if (
+    !Array.isArray(data.billingAliases || []) ||
+    new Set((data.billingAliases || []).map((a) => a.id)).size !==
+      (data.billingAliases || []).length ||
+    (data.billingAliases || []).some(
+      (a) =>
+        typeof a.id !== "string" ||
+        typeof a.customer_name !== "string" ||
+        typeof a.site_name !== "string" ||
+        !data.customers.some((c) => c.id === a.customer_id) ||
+        !parties.some((p) => p.id === a.billing_party_id) ||
+        (a.site_id &&
+          !data.sites?.some(
+            (s) => s.id === a.site_id && s.customer_id === a.customer_id,
+          )),
+    )
+  )
+    throw new Error("給液先と請求先の対応データが不正です");
   for (const p of parties)
     if (
       typeof p.internal_name !== "string" ||
@@ -629,9 +691,24 @@ export function validateBillingData(data: Data) {
     )
       throw new Error("税設定が不正です");
     else taxAmounts("1", rule);
+  for (const p of parties)
+    if (
+      p.terms &&
+      (![p.terms.closing_day, p.terms.invoice_day, p.terms.payment_day].every(
+        (d) => Number.isInteger(d) && d >= 1 && d <= 31,
+      ) ||
+        !Number.isInteger(p.terms.payment_month_offset) ||
+        p.terms.payment_month_offset < 1 ||
+        p.terms.payment_month_offset > 12)
+    )
+      throw new Error("請求条件が不正です");
   for (const i of items) {
     if (
       !validDate(i.day) ||
+      (i.invoice_on !== undefined && !validDate(i.invoice_on)) ||
+      (i.customer_id !== null &&
+        !data.customers.some((c) => c.id === i.customer_id)) ||
+      !["unbilled", "billed", "additional", "recalculate"].includes(i.status) ||
       !["adblue", "goods", "loan"].includes(i.kind) ||
       !["normal", "internal", "purchase", "excluded"].includes(i.category) ||
       typeof i.product !== "string" ||

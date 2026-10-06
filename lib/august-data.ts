@@ -2,6 +2,7 @@ import fixture from "./august-fixture.json";
 import type { Data } from "./domain";
 import { registerHistory, type ReviewRow } from "./history-import";
 import {
+  issuedCoverage,
   defaultIssuer,
   taxAmounts,
   type TaxRule,
@@ -12,22 +13,70 @@ import {
 } from "./billing";
 import { sumDecimal } from "./local-flow";
 export { fixture as augustFixture };
-export function importVerifiedAugust(data: Data, actor: string): Data {
+const exactName = (v: string) =>
+  v
+    .normalize("NFKC")
+    .replace(/[\s　]/g, "")
+    .toLowerCase();
+export function augustExistingMatches(data: Data) {
+  return fixture.rows.map((r) => ({
+    row: r.row,
+    ids: (data.sales || [])
+      .filter(
+        (s) =>
+          s.delivered_on === r.day &&
+          sumDecimal([s.quantity_l]) === sumDecimal([r.quantity]) &&
+          sumDecimal([s.unit_price_excl_tax]) === sumDecimal([r.price]) &&
+          exactName(
+            data.orders.find((o) => o.id === s.order_id)?.location || "",
+          ) === exactName(r.destination),
+      )
+      .map((s) => s.id),
+  }));
+}
+export function importVerifiedAugust(
+  data: Data,
+  actor: string,
+  useExisting = false,
+): Data {
   if ((data.billingInvoices || []).some((i) => i.source === fixture.source.pdf))
     throw new Error("8月照合資料は取込済みです。二重登録しません");
-  for (const r of fixture.rows)
-    if (
-      (data.actuals || []).some(
-        (a) =>
-          a.delivered_on === r.day &&
-          a.quantity_l === r.quantity &&
-          data.orders.find((o) => o.id === a.order_id)?.location ===
-            r.destination,
+  if (!useExisting)
+    for (const r of fixture.rows)
+      if (
+        (data.actuals || []).some(
+          (a) =>
+            a.delivered_on === r.day &&
+            a.quantity_l === r.quantity &&
+            data.orders.find((o) => o.id === a.order_id)?.location ===
+              r.destination,
+        )
       )
+        throw new Error(
+          "同じ8月実績が登録済みです。既存データをバックアップし、重複を確認してください",
+        );
+  const matches = useExisting ? augustExistingMatches(data) : [];
+  if (
+    useExisting &&
+    (matches.some((m) => m.ids.length !== 1) ||
+      new Set(matches.flatMap((m) => m.ids)).size !== 69)
+  )
+    throw new Error(
+      "既存8月実績と原本の完全一致候補が69件揃っていません。給液先・日付・数量・単価の未一致／重複を確認してください。自動補正しません",
+    );
+  if (useExisting && matches.some((m) => issuedCoverage(data, m.ids[0]).length))
+    throw new Error(
+      "アプリで確定済みの明細があります。既発行分は上書きしません。先に請求内容を確認してください",
+    );
+  if (
+    useExisting &&
+    (data.billingItems || []).some(
+      (i) => i.day.startsWith("2026-08") && i.category === "normal",
     )
-      throw new Error(
-        "同じ8月実績が登録済みです。既存データをバックアップし、重複を確認してください",
-      );
+  )
+    throw new Error(
+      "8月の商品・貸与明細が既にあります。二重取込を避けるため、既存明細との照合が必要です",
+    );
   const partyMap = new Map<string, string>(),
     parties: BillingParty[] = [...(data.billingParties || [])];
   for (const b of fixture.bills.filter((b) => b.id !== "内部")) {
@@ -73,22 +122,21 @@ export function importVerifiedAugust(data: Data, actor: string): Data {
     duplicateApproved: false,
     approved: true,
   }));
-  let next = registerHistory(
-    {
-      ...data,
-      billingParties: parties,
-      taxRules: [
-        ...(data.taxRules || []).filter((r) => r.month !== "2026-08"),
-        rule,
-      ],
-      invoiceIssuer: data.invoiceIssuer || defaultIssuer,
-    },
-    rows,
-    fixture.source.excel,
-    "8月",
-    actor,
-  );
-  const appended = next.sales!.slice((data.sales || []).length),
+  const base: Data = {
+    ...data,
+    billingParties: parties,
+    taxRules: [
+      ...(data.taxRules || []).filter((r) => r.month !== "2026-08"),
+      rule,
+    ],
+    invoiceIssuer: data.invoiceIssuer || defaultIssuer,
+  };
+  let next = useExisting
+    ? { ...base }
+    : registerHistory(base, rows, fixture.source.excel, "8月", actor);
+  const appended = useExisting
+      ? matches.map((m) => data.sales!.find((s) => s.id === m.ids[0])!)
+      : next.sales!.slice((data.sales || []).length),
     lineMap = new Map<number, BillingLine>();
   next.sales = next.sales!.map((s) => {
     const index = appended.findIndex((x) => x.id === s.id);
@@ -145,7 +193,20 @@ export function importVerifiedAugust(data: Data, actor: string): Data {
     const i: BillingItem = {
       id: crypto.randomUUID(),
       billing_party_id: partyMap.get(e.bill)!,
-      customer_id: null,
+      customer_id: (() => {
+        const ids = [
+          ...new Set(
+            fixture.rows
+              .map((r, index) =>
+                r.bill === e.bill && r.pdf.destination === e.destination
+                  ? appended[index].customer_id
+                  : null,
+              )
+              .filter((id): id is string => !!id),
+          ),
+        ];
+        return ids.length === 1 ? ids[0] : null;
+      })(),
       day: e.day,
       kind: e.kind as "goods" | "loan",
       product: e.product,
@@ -166,7 +227,7 @@ export function importVerifiedAugust(data: Data, actor: string): Data {
     ls.push({
       source_id: i.id,
       source_kind: "item",
-      customer_id: null,
+      customer_id: i.customer_id,
       actual_day: i.day,
       day: i.day,
       destination: i.destination,

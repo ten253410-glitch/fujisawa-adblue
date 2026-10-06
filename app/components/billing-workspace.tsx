@@ -1,4 +1,13 @@
 "use client";
+import { AccountFields, readAccountFields } from "./account-directory";
+import {
+  billingDates,
+  originalComparison,
+  relinkAccount,
+  recalculateDraft,
+  releaseInvoice,
+  additionalEligible,
+} from "@/lib/billing-accounts";
 import { useState, type FormEvent } from "react";
 import type { Data } from "@/lib/domain";
 import {
@@ -10,7 +19,6 @@ import {
   issuedCoverage,
   makeBillingInvoice,
   confirmBillingInvoice,
-  markAdditional,
   taxAmounts,
   defaultIssuer,
   type BillingParty,
@@ -19,7 +27,11 @@ import {
   type TransactionCategory,
   type TaxRule,
 } from "@/lib/billing";
-import { importVerifiedAugust, augustFixture } from "@/lib/august-data";
+import {
+  importVerifiedAugust,
+  augustExistingMatches,
+  augustFixture,
+} from "@/lib/august-data";
 import { formatDecimal, multiplyNet, sumDecimal } from "@/lib/local-flow";
 import { type LocalCommit } from "./local-business";
 export default function BillingWorkspace({
@@ -48,7 +60,8 @@ export default function BillingWorkspace({
     [issueDay, setIssueDay] = useState("2026-09-01"),
     [dueDay, setDueDay] = useState("2026-09-30"),
     [subject, setSubject] = useState("2026年8月分"),
-    [printId, setPrintId] = useState("");
+    [printId, setPrintId] = useState(""),
+    [useTerms, setUseTerms] = useState(true);
   async function save(
     next: Data,
     entity: string,
@@ -56,7 +69,27 @@ export default function BillingWorkspace({
     action: string,
     detail: unknown,
   ) {
-    await commit(next, entity, id, action, JSON.stringify(detail));
+    const after =
+      entity === "billing_invoice"
+        ? next.billingInvoices?.find((i) => i.id === id)
+        : entity === "billing_party"
+          ? next.billingParties?.find((p) => p.id === id)
+          : entity === "billing_review"
+            ? next.sales?.find((s) => s.id === id) ||
+              next.billingItems?.find((i) => i.id === id)
+            : undefined;
+    await commit(
+      next,
+      entity,
+      id,
+      action,
+      JSON.stringify({
+        ...(typeof detail === "object" && detail !== null
+          ? detail
+          : { detail }),
+        ...(after ? { after } : {}),
+      }),
+    );
     setNotice("保存しました");
   }
   async function run(fn: () => Promise<void>) {
@@ -87,8 +120,12 @@ export default function BillingWorkspace({
       let next = data;
       for (const id of selected)
         next = makeBillingInvoice(next, month, id, kind, actor, {
-          issued_on: issueDay,
-          due_on: dueDay,
+          ...(useTerms
+            ? billingDates(
+                month,
+                parties.find((p) => p.id === id)!,
+              )
+            : { issued_on: issueDay, due_on: dueDay }),
           subject: subject + (kind === "additional" ? " 追加請求" : ""),
         });
       await save(next, "billing_invoice", month, "INSERT", {
@@ -116,6 +153,7 @@ export default function BillingWorkspace({
         formal_name: formal,
         address: String(f.get("address")).trim(),
         active: true,
+        ...readAccountFields(f),
       };
       await save(
         { ...data, billingParties: [...parties, p] },
@@ -129,44 +167,34 @@ export default function BillingWorkspace({
   }
   async function link(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const f = new FormData(e.currentTarget),
-      customer = String(f.get("customer")),
-      site = String(f.get("site")),
-      pid = String(f.get("party"));
+    const f = new FormData(e.currentTarget);
     await run(async () => {
-      if (!parties.some((p) => p.id === pid))
-        throw new Error("請求先を選択してください");
-      if (site) {
-        if (!(data.sites || []).some((s) => s.id === site))
-          throw new Error("給液場所を選択してください");
-        await save(
-          {
-            ...data,
-            sites: (data.sites || []).map((s) =>
-              s.id === site ? { ...s, billing_party_id: pid } : s,
-            ),
-          },
-          "delivery_sites",
-          site,
-          "UPDATE",
-          { billing_party_id: pid },
-        );
-      } else {
-        if (!data.customers.some((c) => c.id === customer))
-          throw new Error("給液先を選択してください");
-        await save(
-          {
-            ...data,
-            customers: data.customers.map((c) =>
-              c.id === customer ? { ...c, billing_party_id: pid } : c,
-            ),
-          },
-          "customers",
-          customer,
-          "UPDATE",
-          { billing_party_id: pid },
-        );
-      }
+      const result = relinkAccount(
+        data,
+        String(f.get("customer")),
+        String(f.get("site")),
+        String(f.get("party")),
+        month,
+        String(f.get("reason")),
+        f.get("apply_past") === "on",
+      );
+      await save(
+        result.data,
+        "billing_mapping",
+        String(f.get("customer")),
+        "RELINK",
+        {
+          reason: String(f.get("reason")),
+          month,
+          changed: result.changed,
+          blocked: result.blocked,
+          before: result.before,
+          after: result.after,
+        },
+      );
+      setNotice(
+        `紐付けを保存しました。過去の未確定売上${result.changed.length}件を再集約。確定済み${result.blocked.length}件は保護しました。`,
+      );
     });
   }
   async function item(e: FormEvent<HTMLFormElement>) {
@@ -194,7 +222,7 @@ export default function BillingWorkspace({
       const i: BillingItem = {
         id: crypto.randomUUID(),
         billing_party_id: pid || null,
-        customer_id: null,
+        customer_id: String(f.get("delivery_customer") || "") || null,
         day,
         kind,
         product,
@@ -217,7 +245,7 @@ export default function BillingWorkspace({
         { ...data, billingItems: [...(data.billingItems || []), i] },
         "billing_item",
         i.id,
-        "INSERT",
+        kind === "loan" ? "LOAN_REGISTER" : "INSERT",
         i,
       );
       form.reset();
@@ -327,6 +355,7 @@ export default function BillingWorkspace({
                 <input name="address" />
               </label>
             </div>
+            <AccountFields />
             <button className="primary" disabled={busy}>
               請求先を追加
             </button>
@@ -347,6 +376,7 @@ export default function BillingWorkspace({
                       formal_name: String(f.get("formal")).trim(),
                       address: String(f.get("address")).trim(),
                       active: f.get("active") === "on",
+                      ...readAccountFields(f),
                     };
                     if (!next.internal_name || !next.formal_name)
                       throw new Error("名称が必要です");
@@ -389,13 +419,14 @@ export default function BillingWorkspace({
                   />
                   利用中
                 </label>
+                <AccountFields party={p} />
                 <button disabled={busy}>請求先を保存</button>
               </form>
             </details>
           ))}
-          <h3>今後の実績に適用する紐付け</h3>
+          <h3>給液先 → 請求先の紐付け・既存実績への適用</h3>
           <p>
-            給液場所の指定を優先します。マスター変更で過去の売上・請求書を変更しません。既存の未設定売上は請求前チェックで明細ごとに指定します。
+            給液場所の指定を優先します。確認した対応関係を保存し、次回取込の候補に使います。対象月の未確定売上へ適用する場合はチェックしてください。数量・単価・売上・発行済み請求書は変更しません。
           </p>
           <form onSubmit={link}>
             <label className="field">
@@ -438,6 +469,14 @@ export default function BillingWorkspace({
                   ))}
               </select>
             </label>
+            <label className="field">
+              変更理由
+              <input name="reason" required />
+            </label>
+            <label className="checkbox-row">
+              <input type="checkbox" name="apply_past" />
+              対象月の既存・未確定売上も確認して再紐付けする
+            </label>
             <button disabled={busy} className="primary">
               請求先の紐付けを保存
             </button>
@@ -448,7 +487,7 @@ export default function BillingWorkspace({
         <section className="panel no-print">
           <h2>受領した8月実資料の照合結果</h2>
           <p>
-            Excel69件・40,500L。既発行税抜2,823,058円、正しい税抜2,884,158円。Schatzの61,100円漏れを検出。付属PDFの17貸与明細・1有償商品・4仕入記録も保存します。
+            Excel69件・40,500L。実請求の正解値は税抜2,823,058円です。数量×単価による計算売上は2,884,158円となり、Schatzに61,100円の原本差異があります。補正・追加請求は行いません。17貸与明細・1有償商品・4仕入記録も保存します。
           </p>
           <p>
             4件の日付差異は自動補正せず、実給液日と請求書記載日を保存します。バッチ番号は伝票番号として使いません。担当者は資料未記載です。
@@ -485,7 +524,7 @@ export default function BillingWorkspace({
                     <td>{r.pdf.day}</td>
                     <td>
                       {r.pdf.amount === null ? (
-                        <strong>空欄・請求漏れ</strong>
+                        <strong>原本空欄・差額確認待ち</strong>
                       ) : (
                         r.pdf.amount
                       )}
@@ -536,6 +575,48 @@ export default function BillingWorkspace({
           >
             照合した8月実データを登録
           </button>
+          <details>
+            <summary>
+              既に一般取込した8月実績と原本を照合する（削除・再取込なし）
+            </summary>
+            <p>
+              給液先名・実給液日・数量・単価が完全一致する既存明細だけを使います。未一致・重複候補があれば停止します。既存の案件ID・実績ID・数量・単価・売上は維持し、請求先と原本照合記録を確認して追加します。
+            </p>
+            {augustExistingMatches(data).map((m) => (
+              <p key={m.row}>
+                Excel {m.row}行：
+                {m.ids.length === 1
+                  ? "完全一致候補：" + m.ids[0]
+                  : m.ids.length === 0
+                    ? "未一致"
+                    : "重複候補（要確認）"}
+              </p>
+            ))}
+            <button
+              className="secondary"
+              disabled={busy || !approved}
+              onClick={() =>
+                void run(async () => {
+                  const next = importVerifiedAugust(data, actor, true);
+                  await save(
+                    next,
+                    "august_reconciliation",
+                    "2026-08",
+                    "LINK_EXISTING",
+                    {
+                      source: augustFixture.source,
+                      existing: augustExistingMatches(data),
+                      financial_values_unchanged: true,
+                    },
+                  );
+                  setApproved(false);
+                  setTab("check");
+                })
+              }
+            >
+              確認して既存実績へ8月原本を紐付ける
+            </button>
+          </details>
           <p className="hint">
             現在のデータを置き換えません。同じ実績がある場合は二重登録を拒否します。先にJSONバックアップを保存してください。
           </p>
@@ -574,6 +655,17 @@ export default function BillingWorkspace({
               <label className="field">
                 給液先／納入先
                 <input name="destination" required />
+              </label>
+              <label className="field">
+                記録する給液先（貸与履歴の紐付け）
+                <select name="delivery_customer">
+                  <option value="">未指定</option>
+                  {data.customers.map((c) => (
+                    <option value={c.id} key={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
               </label>
               <label className="field">
                 請求先
@@ -773,6 +865,31 @@ export default function BillingWorkspace({
                 ))}
               </select>
             </label>
+            <section className="panel">
+              <h3>実請求の正解値（原本を保持）</h3>
+              <p>
+                AdBlue{" "}
+                {formatDecimal(
+                  originalComparison(data, month, party || undefined).quantity,
+                )}{" "}
+                L ／ 税抜{" "}
+                {formatDecimal(
+                  originalComparison(data, month, party || undefined).net,
+                )}{" "}
+                円 ／ 消費税{" "}
+                {formatDecimal(
+                  originalComparison(data, month, party || undefined).tax,
+                )}{" "}
+                円 ／ 税込{" "}
+                {formatDecimal(
+                  originalComparison(data, month, party || undefined).gross,
+                )}{" "}
+                円
+              </p>
+              <p>
+                下の計算売上と独立して照合します。差額がある場合も原本の請求額は書き換えません。
+              </p>
+            </section>
             <div className="totals">
               <div>
                 <small>実績AdBlue総量</small>
@@ -787,7 +904,7 @@ export default function BillingWorkspace({
                 <strong>{check.quantityDifference} L</strong>
               </div>
               <div>
-                <small>実績売上（税抜）</small>
+                <small>計算売上（税抜・正解値とは別）</small>
                 <strong>{formatDecimal(check.net)} 円</strong>
               </div>
               <div>
@@ -828,31 +945,14 @@ export default function BillingWorkspace({
               </div>
             ))}
             {!!check.issues.filter((i) => i.code === "omission").length && (
-              <button
-                className="secondary"
-                disabled={busy}
-                onClick={() =>
-                  void run(async () => {
-                    const ids = [
-                      ...new Set(
-                        check.issues
-                          .filter((i) => i.code === "omission")
-                          .map((i) => i.source_id!),
-                      ),
-                    ];
-                    await save(
-                      markAdditional(data, ids, actor),
-                      "sales",
-                      month,
-                      "UPDATE",
-                      { additional: ids, confirmed_by: actor },
-                    );
-                    setKind("additional");
-                  })
-                }
-              >
-                請求漏れ候補を追加請求対象にする
-              </button>
+              <div className="alert error">
+                <strong>
+                  原本差異の確認が必要です。追加請求へ自動変換しません。
+                </strong>
+                <p>
+                  該当明細は原本の通常請求に数量・単価が掲載されています。数量×固定単価と原本の空欄金額・小計算入額を別々に確認します。原本の正解値と実績数値は補正せず、業務上の理由は確認待ちとして保持します。
+                </p>
+              </div>
             )}
             <h3>請求先別の集約</h3>
             {parties
@@ -916,8 +1016,18 @@ export default function BillingWorkspace({
                           ? "請求済み"
                           : (data.sales || []).find((s) => s.id === l.source_id)
                                 ?.billing_status === "additional"
-                            ? "追加請求対象"
-                            : "未請求"}
+                            ? additionalEligible(data, l.source_id)
+                              ? "追加請求対象"
+                              : "請求内容再計算が必要"
+                            : check.issues.some(
+                                  (i) =>
+                                    i.code === "omission" &&
+                                    i.source_id === l.source_id,
+                                ) ||
+                                data.sales?.find((s) => s.id === l.source_id)
+                                  ?.billing_status === "recalculate"
+                              ? "請求内容再計算が必要"
+                              : "未請求"}
                       </td>
                     </tr>
                   ))}
@@ -950,7 +1060,7 @@ export default function BillingWorkspace({
           <section className="panel no-print">
             <h2>請求書を作成</h2>
             <p>
-              既発行分は変更しません。追加請求では算入されていない明細だけを含めます。
+              既発行分は変更しません。追加請求は正式確定後に新規追加された明細だけが対象です。紐付け変更や原本差異を追加請求へ自動変換しません。
             </p>
             <label className="field">
               請求区分
@@ -959,6 +1069,11 @@ export default function BillingWorkspace({
                 value={kind}
                 onChange={(e) => {
                   setKind(e.target.value as typeof kind);
+                  if (e.target.value === "additional") {
+                    setUseTerms(false);
+                    setIssueDay("");
+                    setDueDay("");
+                  }
                   setApproved(false);
                 }}
               >
@@ -986,6 +1101,20 @@ export default function BillingWorkspace({
                   {p.internal_name}
                 </label>
               ))}
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={useTerms}
+                onChange={(e) => {
+                  setUseTerms(e.target.checked);
+                  setApproved(false);
+                }}
+              />
+              請求先ごとの締日・請求日・支払期限設定を使用する
+            </label>
+            <p className="hint">
+              通常請求の標準は月末締め・翌月1日請求・翌月末支払。個別設定は請求先マスターで変更できます。追加請求の日付は自動で過去日にせず、請求日・支払期限を確認して手入力してください。
+            </p>
             <div className="form-grid">
               <label className="field">
                 請求日
@@ -1179,6 +1308,60 @@ export default function BillingWorkspace({
                       未確定請求書を取消（記録は保持）
                     </button>
                   </>
+                )}
+                {i.status === "draft" && (
+                  <button
+                    className="secondary"
+                    disabled={busy}
+                    onClick={() =>
+                      void run(async () =>
+                        save(
+                          recalculateDraft(data, i.id, actor),
+                          "billing_invoice",
+                          i.id,
+                          "RECALCULATE",
+                          { before: i },
+                        ),
+                      )
+                    }
+                  >
+                    未確定請求書を再計算（旧版を保持）
+                  </button>
+                )}
+                {i.status === "issued" && i.kind !== "reference" && (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const f = new FormData(e.currentTarget);
+                      if (f.get("checked") !== "on") return;
+                      void run(async () =>
+                        save(
+                          releaseInvoice(
+                            data,
+                            i.id,
+                            actor,
+                            String(f.get("reason")),
+                          ),
+                          "billing_invoice",
+                          i.id,
+                          "RELEASE",
+                          { before: i, reason: String(f.get("reason")) },
+                        ),
+                      );
+                    }}
+                  >
+                    <label className="field">
+                      確定解除理由
+                      <input name="reason" required />
+                    </label>
+                    <label>
+                      <input type="checkbox" name="checked" required />
+                      確定解除の影響を確認しました
+                    </label>
+                    <button disabled={busy}>
+                      請求確定を解除（旧版を保持）
+                    </button>
+                  </form>
                 )}
                 <button
                   className="secondary"

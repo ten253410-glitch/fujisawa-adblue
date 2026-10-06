@@ -839,9 +839,11 @@ export function download(
 export function LocalBackup({
   data,
   restore,
+  onExport,
 }: {
   data: Data;
   restore: (next: Data) => Promise<void>;
+  onExport?: () => Promise<Data>;
 }) {
   const [candidate, setCandidate] = useState<Data | null>(null),
     [filename, setFilename] = useState(""),
@@ -909,12 +911,19 @@ export function LocalBackup({
         </p>
         <button
           className="primary"
-          onClick={() =>
-            download(
-              backupText(data),
-              `藤沢AdBlue-バックアップ-${japanDate()}.json`,
-            )
-          }
+          onClick={async () => {
+            try {
+              const snapshot = onExport ? await onExport() : data;
+              download(
+                backupText(snapshot),
+                `藤沢AdBlue-バックアップ-${japanDate()}.json`,
+              );
+            } catch (e) {
+              setError(
+                e instanceof Error ? e.message : "バックアップを保存できません",
+              );
+            }
+          }}
         >
           <Download size={17} />
           JSONバックアップを保存

@@ -57,6 +57,7 @@ import {
   SiteManager,
   LocalSales,
   LocalBackup,
+  download,
 } from "./components/local-business";
 import { localData, LOCAL_KEY, multiplyNet } from "@/lib/local-flow";
 
@@ -65,6 +66,7 @@ import {
   InvoiceWorkspace,
 } from "./components/history-workspace";
 
+import AccountDirectory from "./components/account-directory";
 import BillingWorkspace from "./components/billing-workspace";
 
 type View =
@@ -240,7 +242,7 @@ export default function Workspace() {
       );
     const result = {
       ...next,
-      schema_version: 4,
+      schema_version: 5,
       local_revision: (data.local_revision ?? 0) + 1,
       audit: [
         {
@@ -314,18 +316,39 @@ export default function Workspace() {
   function demoLogin(localOnly = false) {
     try {
       const saved = localStorage.getItem(demoKey);
-      setData(
-        localData(
-          saved ? JSON.parse(saved) : localOnly ? emptyData() : demoSeed(),
-        ),
+      const loaded = localData(
+        saved ? JSON.parse(saved) : localOnly ? emptyData() : demoSeed(),
       );
+      if (saved && (JSON.parse(saved).schema_version || 0) < 5) {
+        try {
+          localStorage.setItem(demoKey + "-before-schema-5", saved);
+        } catch {
+          download(
+            JSON.stringify(
+              {
+                format: "fujisawa-adblue-local",
+                version: 4,
+                data: JSON.parse(saved),
+              },
+              null,
+              2,
+            ),
+            "藤沢AdBlue-構造移行前.json",
+          );
+        }
+        localStorage.setItem(demoKey, JSON.stringify(loaded));
+        setNotice(
+          "請求先・給液先の構造を更新しました。元データを移行前バックアップとして保持し、数量・単価・原本請求額は変更していません。",
+        );
+      }
+      setData(loaded);
       setMode("demo");
       setActor(loginName);
       setError("");
       setView("home");
     } catch {
       setError(
-        "デモ保存データを読み込めません。ブラウザのサイトデータを確認してください。",
+        "保存データの読込・構造更新を完了できませんでした。元データは削除していません。保存容量とJSONバックアップを確認してください。",
       );
     }
   }
@@ -945,9 +968,12 @@ export default function Workspace() {
               >
                 過去実績取込
               </button>
-              <button className="secondary" onClick={() => nav("invoices")}>
-                月次検証請求書
-              </button>
+              <details>
+                <summary>開発・検証用画面</summary>
+                <button className="secondary" onClick={() => nav("invoices")}>
+                  月次検証請求書
+                </button>
+              </details>
               <button className="primary" onClick={() => nav("billing-check")}>
                 請求前チェック・請求書
               </button>
@@ -1163,7 +1189,9 @@ export default function Workspace() {
                 <div>
                   <p className="eyebrow">CUSTOMERS</p>
                   <h1>顧客マスター</h1>
-                  <p className="muted">顧客情報と、変更しても残る単価履歴。</p>
+                  <p className="muted">
+                    請求先ごとの給液先を確認。給液先ごとに単価履歴を管理します。
+                  </p>
                 </div>
                 <button
                   className="primary"
@@ -1253,9 +1281,30 @@ export default function Workspace() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              {mode === "demo" && (
+                <AccountDirectory
+                  data={data}
+                  open={(id) => setCustomerId(id)}
+                />
+              )}
               <div className="two-columns">
                 <section className="panel customer-list">
+                  {mode === "demo" &&
+                    !!data.billingParties?.length &&
+                    !search &&
+                    !customerId && (
+                      <p className="muted">
+                        上の請求先を開くか、給液先名を検索してください。
+                      </p>
+                    )}
                   {data.customers
+                    .filter(
+                      (c) =>
+                        mode !== "demo" ||
+                        !data.billingParties?.length ||
+                        !!search ||
+                        c.id === customerId,
+                    )
                     .filter((c) =>
                       `${c.name} ${c.company_name || ""} ${c.phone} ${c.address} ${(
                         data.sites || []
@@ -1318,6 +1367,23 @@ export default function Workspace() {
                         <dt>メモ</dt>
                         <dd>{currentCustomer.notes || "—"}</dd>
                       </dl>
+                      {mode === "demo" && (
+                        <section>
+                          <h3>この給液先への貸与履歴</h3>
+                          {(data.billingItems || [])
+                            .filter(
+                              (i) =>
+                                i.kind === "loan" &&
+                                i.customer_id === currentCustomer.id,
+                            )
+                            .map((i) => (
+                              <p key={i.id}>
+                                {i.day} / {i.product} / {i.quantity}
+                                {i.unit} / 無償
+                              </p>
+                            ))}
+                        </section>
+                      )}
                       {mode === "demo" && (
                         <SiteManager
                           data={data}
@@ -2069,13 +2135,40 @@ export default function Workspace() {
           {view === "backup" && mode === "demo" && (
             <LocalBackup
               data={data}
+              onExport={async () => {
+                saveDemo(
+                  data,
+                  "backup",
+                  "local",
+                  "EXPORT",
+                  JSON.stringify({
+                    revision: data.local_revision,
+                    customers: data.customers.length,
+                    actuals: data.actuals?.length,
+                    invoices: data.billingInvoices?.length,
+                  }),
+                );
+                return localData(JSON.parse(localStorage.getItem(demoKey)!));
+              }}
               restore={async (next) => {
                 saveDemo(
                   next,
                   "backup",
                   "local",
                   "RESTORE",
-                  "バックアップから復元",
+                  JSON.stringify({
+                    before: {
+                      revision: data.local_revision,
+                      customers: data.customers.length,
+                      actuals: data.actuals?.length,
+                      invoices: data.billingInvoices?.length,
+                    },
+                    after: {
+                      customers: next.customers.length,
+                      actuals: next.actuals?.length,
+                      invoices: next.billingInvoices?.length,
+                    },
+                  }),
                 );
                 setNotice("復元しました");
               }}

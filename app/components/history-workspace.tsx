@@ -1,4 +1,5 @@
 "use client";
+import { accountCandidates } from "@/lib/billing-accounts";
 import { useState, type FormEvent } from "react";
 import type { Data } from "@/lib/domain";
 import {
@@ -440,6 +441,13 @@ export function HistoryImport({
                       </label>
                     ))}
                   </div>
+                  <p className="hint">
+                    保存済み請求先候補：
+                    {accountCandidates(data, r.customer, r.site)
+                      .map((p) => `${p.internal_name} → ${p.formal_name}`)
+                      .join("、") || "未一致（確認して指定）"}
+                    。給液先・場所の選択後に適用します。曖昧な名称を自動確定しません。
+                  </p>
                   <p>
                     顧客候補：
                     {candidates.length
