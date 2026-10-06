@@ -60,6 +60,11 @@ import {
 } from "./components/local-business";
 import { localData, LOCAL_KEY, multiplyNet } from "@/lib/local-flow";
 
+import {
+  HistoryImport,
+  InvoiceWorkspace,
+} from "./components/history-workspace";
+
 type View =
   | "home"
   | "customers"
@@ -70,7 +75,9 @@ type View =
   | "detail"
   | "billing"
   | "audit"
-  | "backup";
+  | "backup"
+  | "history-import"
+  | "invoices";
 const demoKey = LOCAL_KEY;
 const fmt = (day: string) => (day ? day.replaceAll("-", "/") : "未定");
 const timestamp = (value: string) =>
@@ -126,6 +133,9 @@ export default function Workspace() {
   );
   const currentOrder = data.orders.find((o) => o.id === selected);
   const currentCustomer = customer(customerId);
+  const historicalCurrent = (data.actuals || []).some(
+    (a) => a.order_id === currentOrder?.id && a.source_type === "history",
+  );
   const nav = (v: View) => {
     setView(v);
     setMenuOpen(false);
@@ -227,7 +237,7 @@ export default function Workspace() {
       );
     const result = {
       ...next,
-      schema_version: 2,
+      schema_version: 3,
       local_revision: (data.local_revision ?? 0) + 1,
       audit: [
         {
@@ -922,6 +932,15 @@ export default function Workspace() {
               </button>
               <button className="secondary" onClick={() => nav("backup")}>
                 バックアップ・復元
+              </button>
+              <button
+                className="secondary"
+                onClick={() => nav("history-import")}
+              >
+                過去実績取込
+              </button>
+              <button className="secondary" onClick={() => nav("invoices")}>
+                月次検証請求書
               </button>
             </div>
           )}
@@ -1674,27 +1693,35 @@ export default function Workspace() {
               </div>
               <div className="two-columns">
                 <section className="panel">
-                  <h2>受注内容</h2>
+                  <h2>
+                    {historicalCurrent ? "過去実績の管理情報" : "受注内容"}
+                  </h2>
                   <dl className="details">
                     <dt>受注日</dt>
-                    <dd>{fmt(currentOrder.received_at)}</dd>
+                    <dd>
+                      {historicalCurrent
+                        ? "未記載（過去実績から直接取込）"
+                        : fmt(currentOrder.received_at)}
+                    </dd>
                     <dt>受付</dt>
                     <dd>
-                      {
-                        {
-                          line: "LINE",
-                          phone: "電話",
-                          fax: "FAX",
-                          email: "メール",
-                          paper: "紙の受注書",
-                          image: "その他画像",
-                        }[currentOrder.channel]
-                      }
+                      {historicalCurrent
+                        ? "過去給液履歴から直接取込"
+                        : {
+                            line: "LINE",
+                            phone: "電話",
+                            fax: "FAX",
+                            email: "メール",
+                            paper: "紙の受注書",
+                            image: "その他画像",
+                          }[currentOrder.channel]}
                     </dd>
                     <dt>依頼数量</dt>
                     <dd>
                       {currentOrder.requested_quantity === null
-                        ? "未定"
+                        ? historicalCurrent
+                          ? "対象外（過去実績取込）"
+                          : "未定"
                         : `${currentOrder.requested_quantity} ${currentOrder.quantity_unit}`}
                     </dd>
                     <dt>参考単価</dt>
@@ -1991,6 +2018,20 @@ export default function Workspace() {
                 )}
               </section>
             </>
+          )}
+          {view === "history-import" && mode === "demo" && (
+            <HistoryImport
+              data={data}
+              actor={actor}
+              commit={async (...args) => saveDemo(...args)}
+            />
+          )}
+          {view === "invoices" && mode === "demo" && (
+            <InvoiceWorkspace
+              data={data}
+              actor={actor}
+              commit={async (...args) => saveDemo(...args)}
+            />
           )}
           {view === "backup" && mode === "demo" && (
             <LocalBackup

@@ -310,11 +310,33 @@ export function ActualPanel({
                 timeZone: "Asia/Tokyo",
               })}
             </dd>
+            <dt>取込元</dt>
+            <dd>
+              {actual.import_meta
+                ? actual.import_meta.filename +
+                  " / " +
+                  actual.import_meta.row +
+                  "行 / 伝票 " +
+                  (actual.import_meta.slip || "なし")
+                : "通常登録"}
+            </dd>
+            {actual.import_meta && (
+              <>
+                <dt>金額の根拠</dt>
+                <dd>
+                  {actual.import_meta.amount_basis === "source"
+                    ? "原資料の記載金額を確認して採用"
+                    : "数量 × 記載単価"}
+                  （数量×単価：{actual.import_meta.calculated_amount} 円）
+                </dd>
+              </>
+            )}
             <dt>備考</dt>
             <dd>{actual.notes || "—"}</dd>
           </dl>
           <button
             className="secondary"
+            disabled={!actual.document_id}
             onClick={() => openDocument(actual.document_id)}
           >
             確定時の納品書を見る

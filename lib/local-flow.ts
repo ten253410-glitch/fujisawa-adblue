@@ -13,6 +13,8 @@ export type DeliverySite = {
 export type LocalActual = {
   id: string;
   order_id: string;
+  source_type?: "history";
+  import_meta?: import("./history-import").ImportMeta;
   document_id: string;
   delivered_on: string;
   quantity_l: string;
@@ -192,7 +194,7 @@ export function localData(raw: unknown): Data {
   if (!raw || typeof raw !== "object" || Array.isArray(raw))
     throw new Error("保存データの形式が不正です");
   const v = raw as Data;
-  if ((v.schema_version ?? 1) > 2)
+  if ((v.schema_version ?? 1) > 3)
     throw new Error("このアプリより新しい形式です。アプリを更新してください");
   for (const key of [
     "customers",
@@ -204,12 +206,13 @@ export function localData(raw: unknown): Data {
     if (!Array.isArray(v[key])) throw new Error(`${key}の保存データが不正です`);
   const result: Data = {
     ...v,
-    schema_version: 2,
+    schema_version: 3,
     local_revision: v.local_revision ?? 0,
     sites: v.sites ?? [],
     actuals: v.actuals ?? [],
     sales: v.sales ?? [],
     orderImages: v.orderImages ?? [],
+    invoiceDrafts: v.invoiceDrafts ?? [],
   };
   for (const key of [
     "customers",
@@ -221,6 +224,7 @@ export function localData(raw: unknown): Data {
     "actuals",
     "sales",
     "orderImages",
+    "invoiceDrafts",
   ] as const) {
     const list = result[key]!;
     if (
@@ -380,14 +384,23 @@ export function localData(raw: unknown): Data {
   for (const a of result.actuals!) {
     if (
       !orders.has(a.order_id) ||
-      docs.get(a.document_id)?.order_id !== a.order_id ||
+      (a.source_type !== "history" &&
+        docs.get(a.document_id)?.order_id !== a.order_id) ||
       !validDate(a.delivered_on) ||
-      multiplyNet(a.quantity_l, a.unit_price_excl_tax) !== a.net_amount ||
-      !result.prices.some(
-        (p) =>
-          p.id === a.price_id &&
-          p.customer_id === orders.get(a.order_id)?.customer_id,
-      )
+      (a.source_type === "history"
+        ? !a.import_meta ||
+          a.import_meta.calculated_amount !==
+            multiplyNet(a.quantity_l, a.unit_price_excl_tax) ||
+          (a.import_meta.amount_basis === "source"
+            ? sumDecimal([a.import_meta.reviewed.amount]) !== a.net_amount
+            : multiplyNet(a.quantity_l, a.unit_price_excl_tax) !== a.net_amount)
+        : multiplyNet(a.quantity_l, a.unit_price_excl_tax) !== a.net_amount) ||
+      (a.source_type !== "history" &&
+        !result.prices.some(
+          (p) =>
+            p.id === a.price_id &&
+            p.customer_id === orders.get(a.order_id)?.customer_id,
+        ))
     )
       throw new Error("給液実績の関連・金額が不正です");
   }
@@ -411,13 +424,68 @@ export function localData(raw: unknown): Data {
   }
   if (result.actuals!.length !== result.sales!.length)
     throw new Error("実績と売上の件数が一致しません");
+  for (const d of result.invoiceDrafts!) {
+    if (
+      !customers.has(d.customer_id) ||
+      !strings(d, [
+        "customer_name",
+        "customer_address",
+        "month",
+        "created_at",
+        "created_by",
+        "quantity",
+        "net",
+      ]) ||
+      !/^\d{4}-(0[1-9]|1[0-2])$/.test(d.month) ||
+      !Array.isArray(d.lines) ||
+      !d.lines.length ||
+      d.rules_status !== "pending" ||
+      d.tax !== null ||
+      d.gross !== null
+    )
+      throw new Error("検証請求書の形式が不正です");
+    if (
+      new Set(d.lines.map((l) => l.sale_id)).size !== d.lines.length ||
+      d.lines.some(
+        (l) =>
+          !strings(l, [
+            "sale_id",
+            "day",
+            "site",
+            "quantity",
+            "price",
+            "amount",
+            "slip",
+          ]) ||
+          !result.sales!.some(
+            (s) =>
+              s.id === l.sale_id &&
+              s.customer_id === d.customer_id &&
+              s.delivered_on === l.day &&
+              s.delivered_on.startsWith(d.month) &&
+              s.quantity_l === l.quantity &&
+              s.unit_price_excl_tax === l.price &&
+              s.net_amount === l.amount,
+          ),
+      ) ||
+      sumDecimal(d.lines.map((l) => l.amount)) !== d.net ||
+      sumDecimal(d.lines.map((l) => l.quantity)) !== d.quantity
+    )
+      throw new Error("検証請求書の明細・金額が不正です");
+    if (d.reference) {
+      if (!strings(d.reference, ["quantity", "net", "tax", "gross", "notes"]))
+        throw new Error("照合値の形式が不正です");
+      for (const key of ["quantity", "net", "tax", "gross"] as const)
+        if (d.reference[key]) sumDecimal([d.reference[key]]);
+    }
+  }
   return result;
 }
 export function backupText(data: Data) {
   return JSON.stringify(
     {
       format: "fujisawa-adblue-local",
-      version: 2,
+      version: 3,
       exported_at: new Date().toISOString(),
       data,
     },
@@ -427,7 +495,10 @@ export function backupText(data: Data) {
 }
 export function parseBackup(text: string): Data {
   const parsed = JSON.parse(text);
-  if (parsed?.format !== "fujisawa-adblue-local" || parsed.version !== 2)
+  if (
+    parsed?.format !== "fujisawa-adblue-local" ||
+    ![2, 3].includes(parsed.version)
+  )
     throw new Error("藤沢AdBlueのJSONバックアップを選択してください");
   return localData(parsed.data);
 }

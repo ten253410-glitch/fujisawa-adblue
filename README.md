@@ -74,3 +74,9 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE=/usr/bin/chromium npm run test:e2e
 `npm test` は日付・単価適用・数量候補・入力検証と、PGlite上の実SQL移行・管理者RLS・監査・納品書RPC・実績単価固定・請求ガードを検証します。PGliteのAuth／Storageスキーマはテスト用互換スタブで、実Supabase接続確認の代わりではありません。E2Eはデスクトップ／スマートフォン幅で顧客・単価履歴・LINE受注・予定・画像アップロード・保存と、電話受注を検証します。カメラの物理動作は実スマートフォンで別途確認してください。
 
 詳細な確認済みルール・未決事項は [docs/BUSINESS_RULES.md](docs/BUSINESS_RULES.md)。
+
+## 2026年8月の実資料による検証準備
+
+過去給液履歴のCSV／xlsx一括取込、必須プレビューと紐付け確認、重複警告、対象月・顧客別の検証請求書一括作成、印刷／PDF保存、発行済み数量・金額の照合入力を追加しました。
+消費税・税込請求額・締めルールは未確定です。実際の8月資料はまだ未受領で、完全一致検証はこれからです。
+[8月資料の取込・請求書・照合手順](docs/AUGUST_VALIDATION.md)

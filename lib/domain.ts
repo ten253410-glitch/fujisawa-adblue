@@ -75,6 +75,7 @@ export type Data = {
   sites?: import("./local-flow").DeliverySite[];
   actuals?: import("./local-flow").LocalActual[];
   sales?: import("./local-flow").LocalSale[];
+  invoiceDrafts?: import("./history-import").DraftInvoice[];
   orderImages?: import("./order-import").SourceImage[];
 };
 export const emptyData = (): Data => ({

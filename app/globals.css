@@ -1354,3 +1354,68 @@ textarea::placeholder {
   display: block;
   color: #607580;
 }
+
+.import-row {
+  padding: 18px 0;
+  border-bottom: 1px solid #dbe4e8;
+}
+.import-row summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.invoice-page {
+  margin-top: 24px;
+}
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+  .sidebar,
+  .mobile-nav,
+  .topbar,
+  .demo-banner,
+  .content > .inline,
+  .no-print {
+    display: none !important;
+  }
+  main,
+  .main,
+  .content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  .invoice-page {
+    box-shadow: none !important;
+    border: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    break-after: page;
+  }
+  .invoice-page .table-scroll {
+    overflow: visible;
+  }
+  .invoice-page table {
+    min-width: 0;
+    width: 100%;
+    font-size: 10pt;
+  }
+  .invoice-page th,
+  .invoice-page td {
+    padding: 6px;
+    word-break: break-word;
+  }
+  tr {
+    break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+}
