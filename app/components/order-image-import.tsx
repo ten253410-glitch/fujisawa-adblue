@@ -65,6 +65,19 @@ export default function OrderImageImport({
   mode: "demo" | "live";
   onConfirm: (input: ImportConfirmation) => Promise<void>;
 }) {
+  const [aiEnabled, setAiEnabled] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/order-ocr")
+      .then((r) => r.json())
+      .then((r) => {
+        if (alive) setAiEnabled(r.enabled === true);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
   const [file, setFile] = useState<File | null>(null),
     [preview, setPreview] = useState(""),
     [readingImage, setReadingImage] = useState("");
@@ -295,14 +308,17 @@ export default function OrderImageImport({
                 <label className="checkbox-row">
                   <input
                     type="checkbox"
+                    disabled={!aiEnabled}
                     checked={consent}
                     onChange={(e) => setConsent(e.target.checked)}
                   />
-                  この受注画像をOpenAIへ送信して読み取る（利用料金が発生します）
+                  {aiEnabled
+                    ? "この受注画像をOpenAIへ送信して読み取る（利用料金が発生します）"
+                    : "AI読み取りは停止中（将来用）。画像を見ながら手入力してください。"}
                 </label>
                 <button
                   className="primary"
-                  disabled={busy || !consent}
+                  disabled={busy || !consent || !aiEnabled}
                   onClick={read}
                 >
                   <ScanLine size={18} />
@@ -468,8 +484,23 @@ export default function OrderImageImport({
                     <div className="master-comparison">
                       <strong>照合先：{selected.name}</strong>
                       <dl className="details">
-                        <dt>登録場所・住所</dt>
+                        <dt>会社住所</dt>
                         <dd>{selected.address || "未登録"}</dd>
+                        <dt>登録給液場所</dt>
+                        <dd>
+                          {(data.sites || [])
+                            .filter(
+                              (s) => s.customer_id === selected.id && s.active,
+                            )
+                            .map((s) => (
+                              <div key={s.id}>
+                                {s.name} / {s.address} {s.contact}
+                              </div>
+                            ))}
+                          {!(data.sites || []).some(
+                            (s) => s.customer_id === selected.id && s.active,
+                          ) && "未登録"}
+                        </dd>
                         <dt>登録連絡先</dt>
                         <dd>
                           {selected.contact} {selected.phone || "未登録"}

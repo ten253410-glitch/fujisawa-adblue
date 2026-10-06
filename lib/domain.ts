@@ -1,6 +1,7 @@
 export type Customer = {
   id: string;
   name: string;
+  company_name?: string;
   contact: string;
   phone: string;
   address: string;
@@ -23,18 +24,26 @@ export type Order = {
   id: string;
   case_no: string;
   customer_id: string;
-  channel: "line" | "phone" | "fax" | "paper" | "image";
+  channel: "line" | "phone" | "fax" | "paper" | "image" | "email";
   received_at: string;
   requested_quantity: number | null;
   quantity_unit: string;
   source_text: string;
   location: string;
+  site_id?: string | null;
+  given_on?: string | null;
   address?: string;
   contact?: string;
   requested_on?: string | null;
   notes: string;
   scheduled_on: string | null;
-  status: "new" | "scheduled" | "document_pending" | "completed" | "cancelled";
+  status:
+    | "new"
+    | "scheduled"
+    | "document_pending"
+    | "awaiting_document"
+    | "completed"
+    | "cancelled";
   version?: number;
   created_at: string;
 };
@@ -61,6 +70,11 @@ export type Data = {
   orders: Order[];
   documents: Document[];
   audit: Audit[];
+  schema_version?: number;
+  local_revision?: number;
+  sites?: import("./local-flow").DeliverySite[];
+  actuals?: import("./local-flow").LocalActual[];
+  sales?: import("./local-flow").LocalSale[];
   orderImages?: import("./order-import").SourceImage[];
 };
 export const emptyData = (): Data => ({
@@ -121,7 +135,8 @@ export const statusNames: Record<Order["status"], string> = {
   new: "新規受注",
   scheduled: "給液予定",
   document_pending: "納品書確認待ち",
-  completed: "給液完了",
+  awaiting_document: "給液済・納品書待ち",
+  completed: "実績・売上登録済",
   cancelled: "取消",
 };
 export function demoSeed(): Data {

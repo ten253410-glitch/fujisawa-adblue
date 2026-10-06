@@ -11,7 +11,7 @@ test("customer, prices, LINE order, schedule, reply, image and persistence", asy
   await page.getByRole("button", { name: "顧客検索" }).click();
   await page.getByRole("button", { name: "顧客を追加" }).click();
   await page.getByLabel("顧客名 *", { exact: true }).fill("テスト運輸");
-  await page.getByLabel("主な給液場所").fill("藤沢車庫");
+  await page.getByLabel("会社住所").fill("藤沢車庫");
   await page.getByRole("button", { name: "顧客を保存", exact: true }).click();
   await page.getByLabel("単価（円） *").fill("110");
   await page.getByLabel("適用開始日 *").fill("2020-01-01");
@@ -49,7 +49,7 @@ test("customer, prices, LINE order, schedule, reply, image and persistence", asy
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
     "2026/10/08",
   );
-  await page.getByRole("button", { name: "撮影・追加" }).click();
+  await page.getByRole("button", { name: "撮影・追加", exact: true }).click();
   await page.getByLabel("画像を選択", { exact: true }).setInputFiles({
     name: "delivery.png",
     mimeType: "image/png",

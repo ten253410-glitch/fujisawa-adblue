@@ -9,11 +9,27 @@ function response(message: string, status: number) {
     { status, headers: { "Cache-Control": "no-store" } },
   );
 }
+export async function GET() {
+  return Response.json(
+    {
+      enabled:
+        process.env.ADBLUE_ENABLE_PAID_OCR === "true" &&
+        !!process.env.ADBLUE_OPENAI_API_KEY &&
+        !!process.env.OPENAI_OCR_MODEL,
+    },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
 export async function POST(request: Request) {
   const url = new URL(request.url),
     origin = request.headers.get("origin");
   if (!origin || origin !== url.origin)
     return response("同じサイトの画面から読み取りを実行してください。", 403);
+  if (process.env.ADBLUE_ENABLE_PAID_OCR !== "true")
+    return response(
+      "ローカル版ではAI読み取りを停止しています。画像を見ながら手入力できます。",
+      503,
+    );
   const apiKey = process.env.ADBLUE_OPENAI_API_KEY;
   const model = process.env.OPENAI_OCR_MODEL;
   if (!apiKey || !model)

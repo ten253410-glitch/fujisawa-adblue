@@ -19,6 +19,11 @@ async function image(page: Page) {
 test("image candidates require customer choice and human confirmation, keep hope date separate", async ({
   page,
 }) => {
+  await page.route("**/api/order-ocr", (route) =>
+    route.request().method() === "GET"
+      ? route.fulfill({ json: { enabled: true } })
+      : route.continue(),
+  );
   await page.goto("/");
   await page.getByRole("button", { name: "デモを開く" }).click();
   await page
@@ -86,6 +91,11 @@ test("image candidates require customer choice and human confirmation, keep hope
 test("API error keeps image and enables manual entry; new customer registered only on confirmation", async ({
   page,
 }) => {
+  await page.route("**/api/order-ocr", (route) =>
+    route.request().method() === "GET"
+      ? route.fulfill({ json: { enabled: true } })
+      : route.continue(),
+  );
   await page.goto("/");
   await page.getByRole("button", { name: "デモを開く" }).click();
   await page
@@ -98,11 +108,13 @@ test("API error keeps image and enables manual entry; new customer registered on
     buffer: await image(page),
   });
   await page.route("**/api/order-ocr", (route) =>
-    route.fulfill({
-      status: 503,
-      contentType: "application/json",
-      body: JSON.stringify({ error: "AI読み取りは未設定です。" }),
-    }),
+    route.request().method() === "GET"
+      ? route.fulfill({ json: { enabled: true } })
+      : route.fulfill({
+          status: 503,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "AI読み取りは未設定です。" }),
+        }),
   );
   await page
     .getByLabel(
@@ -142,39 +154,44 @@ test("API error keeps image and enables manual entry; new customer registered on
 test("AI response populates all read fields but never registers or selects a customer", async ({
   page,
 }) => {
+  await page.route("**/api/order-ocr", (route) =>
+    route.request().method() === "GET"
+      ? route.fulfill({ json: { enabled: true } })
+      : route.continue(),
+  );
   await page.goto("/");
   await page.getByRole("button", { name: "デモを開く" }).click();
   await page
     .getByRole("button", { name: "受注画像取込", exact: false })
     .first()
     .click();
-  await page
-    .getByLabel("受注画像を選択", { exact: true })
-    .setInputFiles({
-      name: "line.png",
-      mimeType: "image/png",
-      buffer: await image(page),
-    });
+  await page.getByLabel("受注画像を選択", { exact: true }).setInputFiles({
+    name: "line.png",
+    mimeType: "image/png",
+    buffer: await image(page),
+  });
   await page.route("**/api/order-ocr", (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        fields: {
-          customer_name: "湘南運送",
-          location: "第一現場",
-          address: "藤沢市テスト住所",
-          quantity_l: 123.5,
-          requested_on: "2026-10-08",
-          received_on: "2026-10-06",
-          contact: "0466-00-0001",
-          notes: "入口で連絡",
-        },
-        warnings: ["原画像で確認"],
-        model: "mock-model",
-        method: "openai",
-      }),
-    }),
+    route.request().method() === "GET"
+      ? route.fulfill({ json: { enabled: true } })
+      : route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            fields: {
+              customer_name: "湘南運送",
+              location: "第一現場",
+              address: "藤沢市テスト住所",
+              quantity_l: 123.5,
+              requested_on: "2026-10-08",
+              received_on: "2026-10-06",
+              contact: "0466-00-0001",
+              notes: "入口で連絡",
+            },
+            warnings: ["原画像で確認"],
+            model: "mock-model",
+            method: "openai",
+          }),
+        }),
   );
   await page
     .getByLabel(

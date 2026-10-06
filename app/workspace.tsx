@@ -31,7 +31,7 @@ import {
 import OrderImageImport, {
   type ImportConfirmation,
 } from "./components/order-image-import";
-import { importedOrder, type SourceImage } from "@/lib/order-import";
+import { importedOrder, validDate, type SourceImage } from "@/lib/order-import";
 import { supabase } from "@/lib/supabase";
 import { loadRemote, writeRemote } from "@/lib/repository";
 import {
@@ -52,6 +52,14 @@ import {
   statusNames,
 } from "@/lib/domain";
 
+import {
+  ActualPanel,
+  SiteManager,
+  LocalSales,
+  LocalBackup,
+} from "./components/local-business";
+import { localData, LOCAL_KEY, multiplyNet } from "@/lib/local-flow";
+
 type View =
   | "home"
   | "customers"
@@ -61,8 +69,9 @@ type View =
   | "documents"
   | "detail"
   | "billing"
-  | "audit";
-const demoKey = "fujisawa-adblue-demo-v1";
+  | "audit"
+  | "backup";
+const demoKey = LOCAL_KEY;
 const fmt = (day: string) => (day ? day.replaceAll("-", "/") : "未定");
 const timestamp = (value: string) =>
   new Date(value).toLocaleString("ja-JP", { timeZone: "Asia/Tokyo" });
@@ -91,7 +100,7 @@ export default function Workspace() {
   const [actor, setActor] = useState("");
   const [data, setData] = useState<Data>(emptyData());
   const [view, setView] = useState<View>("home");
-  const [channel, setChannel] = useState<"line" | "phone">("line");
+  const [channel, setChannel] = useState<Order["channel"]>("line");
   const [selected, setSelected] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -108,6 +117,8 @@ export default function Workspace() {
   const [unit, setUnit] = useState("L");
   const [loginName, setLoginName] = useState("土屋");
   const [uploadOrder, setUploadOrder] = useState("");
+  const [siteId, setSiteId] = useState("");
+  const [scheduleDay, setScheduleDay] = useState(japanDate());
   const today = japanDate();
   const customer = (id: string) => data.customers.find((c) => c.id === id);
   const activeOrders = data.orders.filter(
@@ -205,8 +216,19 @@ export default function Workspace() {
     action: string,
     detail: string,
   ) {
+    const saved = localStorage.getItem(demoKey);
+    if (
+      saved &&
+      (localData(JSON.parse(saved)).local_revision ?? 0) !==
+        (data.local_revision ?? 0)
+    )
+      throw new Error(
+        "別の画面でデータが更新されました。ログアウトして入り直してください。",
+      );
     const result = {
       ...next,
+      schema_version: 2,
+      local_revision: (data.local_revision ?? 0) + 1,
       audit: [
         {
           id: crypto.randomUUID(),
@@ -220,7 +242,13 @@ export default function Workspace() {
         ...next.audit,
       ],
     };
-    localStorage.setItem(demoKey, JSON.stringify(result));
+    try {
+      localStorage.setItem(demoKey, JSON.stringify(result));
+    } catch {
+      throw new Error(
+        "ブラウザの保存容量が不足しています。バックアップを保存してください。今回の変更は保存されていません。",
+      );
+    }
     setData(result);
   }
   async function persist(
@@ -270,10 +298,14 @@ export default function Workspace() {
       await enterLive();
     });
   }
-  function demoLogin() {
+  function demoLogin(localOnly = false) {
     try {
       const saved = localStorage.getItem(demoKey);
-      setData(saved ? JSON.parse(saved) : demoSeed());
+      setData(
+        localData(
+          saved ? JSON.parse(saved) : localOnly ? emptyData() : demoSeed(),
+        ),
+      );
       setMode("demo");
       setActor(loginName);
       setError("");
@@ -304,6 +336,9 @@ export default function Workspace() {
       const record: Customer = {
         id: editing?.id ?? crypto.randomUUID(),
         name,
+        ...(mode === "demo"
+          ? { company_name: String(f.get("company_name") || "").trim() }
+          : {}),
         contact: String(f.get("contact")).trim(),
         phone: String(f.get("phone")).trim(),
         address: String(f.get("address")).trim(),
@@ -326,8 +361,14 @@ export default function Workspace() {
       const amount = Number(f.get("amount"));
       const priceUnit = "L";
       const date = String(f.get("effective_from"));
-      if (!Number.isFinite(amount) || amount < 0 || !priceUnit || !date)
+      if (
+        !Number.isFinite(amount) ||
+        amount < 0 ||
+        !priceUnit ||
+        !validDate(date)
+      )
         throw new Error("金額・単価単位・適用開始日を確認してください");
+      if (mode === "demo") multiplyNet("1", String(amount));
       const p: Price = {
         id: crypto.randomUUID(),
         customer_id: customerId,
@@ -373,6 +414,14 @@ export default function Workspace() {
         quantity_unit: "L",
         source_text: channel === "line" ? raw : "",
         location: String(f.get("location")).trim(),
+        ...(mode === "demo"
+          ? {
+              site_id: siteId || null,
+              location_address: String(f.get("location_address") || "").trim(),
+              contact: String(f.get("order_contact") || "").trim(),
+              requested_on: String(f.get("requested_on") || "") || null,
+            }
+          : {}),
         notes: String(f.get("notes")).trim(),
         scheduled_on: scheduled,
         status: scheduled ? "scheduled" : "new",
@@ -489,6 +538,8 @@ export default function Workspace() {
     const f = new FormData(e.currentTarget);
     await run(async () => {
       if (!currentOrder) return;
+      if ((data.actuals || []).some((a) => a.order_id === currentOrder.id))
+        throw new Error("確定済み実績の案件は変更できません");
       const scheduled = String(f.get("scheduled_on")) || null;
       const o: Order = {
         ...currentOrder,
@@ -496,7 +547,8 @@ export default function Workspace() {
         location: String(f.get("location")).trim(),
         notes: String(f.get("notes")).trim(),
         status:
-          currentOrder.status === "document_pending"
+          currentOrder.status === "document_pending" ||
+          currentOrder.status === "awaiting_document"
             ? "document_pending"
             : scheduled
               ? "scheduled"
@@ -568,7 +620,8 @@ export default function Workspace() {
           ...data,
           documents: [...data.documents, doc],
           orders: data.orders.map((o) =>
-            o.id === uploadOrder
+            o.id === uploadOrder &&
+            !(data.actuals || []).some((a) => a.order_id === o.id)
               ? { ...o, status: "document_pending" as const }
               : o,
           ),
@@ -681,9 +734,9 @@ export default function Workspace() {
             </button>
           </form>
           <div className="demo-login">
-            <strong>操作確認用デモ</strong>
+            <strong>このPCで利用（パスワード不要）</strong>
             <p>
-              サンプルデータをこのブラウザに保存します。共有・本番データへの接続はありません。
+              土屋・佐藤は同じ権限です。保存済みのデータを続けて利用します。初回は空の業務データ、またはサンプルを選べます。
             </p>
             <div className="inline">
               <select
@@ -694,7 +747,10 @@ export default function Workspace() {
                 <option>土屋</option>
                 <option>佐藤</option>
               </select>
-              <button className="secondary" onClick={demoLogin}>
+              <button className="primary" onClick={() => demoLogin(true)}>
+                ローカル業務を開く
+              </button>
+              <button className="secondary" onClick={() => demoLogin(false)}>
                 デモを開く
               </button>
             </div>
@@ -702,7 +758,7 @@ export default function Workspace() {
           <small className="muted">
             {supabase
               ? "Supabase Auth接続設定あり · 管理者のみ利用可能"
-              : "Supabase未設定 · 本番ログインには環境変数が必要です"}
+              : "ローカル利用は無料です。外部サービスの設定は不要です。"}
           </small>
         </div>
       </div>
@@ -711,7 +767,9 @@ export default function Workspace() {
     .filter((o) => {
       if (filter === "new") return o.status === "new";
       if (filter === "undated") return !o.scheduled_on;
-      if (filter === "documents") return o.status === "document_pending";
+      if (filter === "documents")
+        return ["document_pending", "awaiting_document"].includes(o.status);
+      if (filter === "date") return o.scheduled_on === scheduleDay;
       if (filter === "today") return o.scheduled_on === today;
       if (filter === "tomorrow") return o.scheduled_on === addDays(today, 1);
       if (filter === "week")
@@ -803,7 +861,7 @@ export default function Workspace() {
           </span>
           <div>
             <span className={mode === "demo" ? "mode demo" : "mode"}>
-              {mode === "demo" ? "デモモード" : "Supabase接続"}
+              {mode === "demo" ? "ローカル版" : "Supabase接続"}
             </span>
             <span className="top-user">{actor} さん</span>
             {mode === "live" && (
@@ -843,7 +901,7 @@ export default function Workspace() {
         <div className="content">
           {mode === "demo" && (
             <div className="demo-banner">
-              デモ：データはこのブラウザ内だけに保存されます。実際の顧客情報・納品書は登録しないでください。
+              ローカル版：このPC・このブラウザに保存します。業務終了時にバックアップしてください。
             </div>
           )}
           {error && (
@@ -855,6 +913,16 @@ export default function Workspace() {
             <div className="alert success" role="status">
               <Check size={18} />
               {notice}
+            </div>
+          )}
+          {mode === "demo" && (
+            <div className="inline">
+              <button className="secondary" onClick={() => nav("billing")}>
+                売上・請求管理
+              </button>
+              <button className="secondary" onClick={() => nav("backup")}>
+                バックアップ・復元
+              </button>
             </div>
           )}
           {view === "home" && (
@@ -896,8 +964,10 @@ export default function Workspace() {
                     },
                     {
                       name: "納品書確認待ち",
-                      count: activeOrders.filter(
-                        (o) => o.status === "document_pending",
+                      count: activeOrders.filter((o) =>
+                        ["document_pending", "awaiting_document"].includes(
+                          o.status,
+                        ),
                       ).length,
                       key: "documents",
                       icon: FileText,
@@ -933,9 +1003,15 @@ export default function Workspace() {
                       <span>未請求</span>
                       <FileText size={19} />
                     </div>
-                    <strong>—</strong>
+                    <strong>
+                      {mode === "demo"
+                        ? (data.sales || []).filter(
+                            (s) => s.billing_status === "unbilled",
+                          ).length
+                        : "—"}
+                    </strong>
                     <span className="stat-link">
-                      Phase 3で対応 <ArrowRight size={15} />
+                      売上を確認 <ArrowRight size={15} />
                     </span>
                   </button>
                 </div>
@@ -978,7 +1054,7 @@ export default function Workspace() {
                       click: () => nav("customers"),
                     },
                     {
-                      name: "請求書作成",
+                      name: mode === "demo" ? "売上・請求確認" : "請求書作成",
                       sub: "Phase 3で対応",
                       Icon: FileText,
                       click: () => nav("billing"),
@@ -1092,6 +1168,14 @@ export default function Workspace() {
                           defaultValue={editing?.name}
                         />
                       </Field>
+                      {mode === "demo" && (
+                        <Field label="会社名">
+                          <input
+                            name="company_name"
+                            defaultValue={editing?.company_name}
+                          />
+                        </Field>
+                      )}
                       <Field label="担当者">
                         <input name="contact" defaultValue={editing?.contact} />
                       </Field>
@@ -1102,7 +1186,7 @@ export default function Workspace() {
                           defaultValue={editing?.phone}
                         />
                       </Field>
-                      <Field label="主な給液場所">
+                      <Field label="会社住所">
                         <input name="address" defaultValue={editing?.address} />
                       </Field>
                     </div>
@@ -1128,7 +1212,12 @@ export default function Workspace() {
                 <section className="panel customer-list">
                   {data.customers
                     .filter((c) =>
-                      `${c.name} ${c.phone} ${c.address}`.includes(search),
+                      `${c.name} ${c.company_name || ""} ${c.phone} ${c.address} ${(
+                        data.sites || []
+                      )
+                        .filter((s) => s.customer_id === c.id)
+                        .map((s) => s.name + " " + s.address)
+                        .join(" ")}`.includes(search),
                     )
                     .map((c) => (
                       <button
@@ -1177,11 +1266,26 @@ export default function Workspace() {
                         <dd>{currentCustomer.contact || "—"}</dd>
                         <dt>電話</dt>
                         <dd>{currentCustomer.phone || "—"}</dd>
-                        <dt>場所</dt>
+                        <dt>会社名</dt>
+                        <dd>{currentCustomer.company_name || "—"}</dd>
+                        <dt>会社住所</dt>
                         <dd>{currentCustomer.address || "—"}</dd>
                         <dt>メモ</dt>
                         <dd>{currentCustomer.notes || "—"}</dd>
                       </dl>
+                      {mode === "demo" && (
+                        <SiteManager
+                          data={data}
+                          customerId={customerId}
+                          commit={async (...args) => saveDemo(...args)}
+                        />
+                      )}
+                      <h3>
+                        現在単価：
+                        {currentPrice(data.prices, customerId, today)?.amount ??
+                          "未登録"}{" "}
+                        円/L（税抜）
+                      </h3>
                       <h3>単価履歴</h3>
                       <p className="hint">
                         税抜・円/Lで管理します。実際の給液日に有効な単価を適用し、実績確定時に固定します。
@@ -1285,6 +1389,29 @@ export default function Workspace() {
               </div>
               <section className="panel form-panel">
                 <form onSubmit={saveOrder}>
+                  {mode === "demo" && (
+                    <Field label="受注経路">
+                      <select
+                        value={channel}
+                        onChange={(e) =>
+                          setChannel(e.target.value as Order["channel"])
+                        }
+                      >
+                        {[
+                          ["phone", "電話"],
+                          ["line", "LINE"],
+                          ["fax", "FAX"],
+                          ["email", "メール"],
+                          ["paper", "紙"],
+                          ["image", "画像"],
+                        ].map(([v, n]) => (
+                          <option key={v} value={v}>
+                            {n}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                  )}
                   {channel === "line" && (
                     <div className="line-input">
                       <Field label="LINE本文">
@@ -1326,7 +1453,10 @@ export default function Workspace() {
                       <select
                         required
                         value={customerId}
-                        onChange={(e) => setCustomerId(e.target.value)}
+                        onChange={(e) => {
+                          setCustomerId(e.target.value);
+                          setSiteId("");
+                        }}
                       >
                         <option value="">選択してください</option>
                         {data.customers
@@ -1359,13 +1489,66 @@ export default function Workspace() {
                     <Field label="数量の単位">
                       <input value="L（リットル）" readOnly />
                     </Field>
+                    {mode === "demo" && (
+                      <Field label="登録済み給液場所">
+                        <select
+                          value={siteId}
+                          onChange={(e) => setSiteId(e.target.value)}
+                        >
+                          <option value="">手入力・選択してください</option>
+                          {(data.sites || [])
+                            .filter(
+                              (s) => s.customer_id === customerId && s.active,
+                            )
+                            .map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name} / {s.address}
+                              </option>
+                            ))}
+                        </select>
+                      </Field>
+                    )}
                     <Field label="給液場所">
                       <input
                         name="location"
-                        key={customerId}
-                        defaultValue={customer(customerId)?.address || ""}
+                        key={customerId + siteId}
+                        defaultValue={
+                          (data.sites || []).find((s) => s.id === siteId)
+                            ?.name ||
+                          customer(customerId)?.address ||
+                          ""
+                        }
                       />
                     </Field>
+                    {mode === "demo" && (
+                      <>
+                        <Field label="給液場所住所">
+                          <input
+                            name="location_address"
+                            key={siteId + "address"}
+                            defaultValue={
+                              (data.sites || []).find((s) => s.id === siteId)
+                                ?.address || ""
+                            }
+                          />
+                        </Field>
+                        <Field label="受注連絡先">
+                          <input
+                            name="order_contact"
+                            key={customerId + siteId + "contact"}
+                            defaultValue={
+                              (data.sites || []).find((s) => s.id === siteId)
+                                ?.contact ||
+                              customer(customerId)?.phone ||
+                              ""
+                            }
+                          />
+                        </Field>
+                        <Field label="希望給液日">
+                          <input name="requested_on" type="date" />
+                        </Field>
+                      </>
+                    )}
                     <Field label="給液予定日（未定なら空欄）">
                       <input name="scheduled_on" type="date" />
                     </Field>
@@ -1413,6 +1596,16 @@ export default function Workspace() {
                 </button>
               </div>
               <section className="panel">
+                <Field label="日付を指定">
+                  <input
+                    type="date"
+                    value={scheduleDay}
+                    onChange={(e) => {
+                      setScheduleDay(e.target.value);
+                      setFilter("date");
+                    }}
+                  />
+                </Field>
                 <div className="tabs wrap">
                   {[
                     ["all", "すべて"],
@@ -1441,6 +1634,24 @@ export default function Workspace() {
           )}
           {view === "detail" && currentOrder && (
             <>
+              {mode === "demo" && (
+                <ActualPanel
+                  key={currentOrder.id}
+                  data={data}
+                  order={currentOrder}
+                  actor={actor}
+                  commit={async (...args) => saveDemo(...args)}
+                  openDocument={(id) => {
+                    const doc = data.documents.find((d) => d.id === id);
+                    if (doc) void openImage(doc);
+                  }}
+                  openUpload={() => {
+                    setUploadOrder(currentOrder.id);
+                    nav("documents");
+                  }}
+                  openSales={() => nav("billing")}
+                />
+              )}
               <div className="page-heading">
                 <div>
                   <p className="eyebrow">{currentOrder.case_no}</p>
@@ -1474,6 +1685,7 @@ export default function Workspace() {
                           line: "LINE",
                           phone: "電話",
                           fax: "FAX",
+                          email: "メール",
                           paper: "紙の受注書",
                           image: "その他画像",
                         }[currentOrder.channel]
@@ -1780,7 +1992,33 @@ export default function Workspace() {
               </section>
             </>
           )}
-          {view === "billing" && (
+          {view === "backup" && mode === "demo" && (
+            <LocalBackup
+              data={data}
+              restore={async (next) => {
+                saveDemo(
+                  next,
+                  "backup",
+                  "local",
+                  "RESTORE",
+                  "バックアップから復元",
+                );
+                setNotice("復元しました");
+              }}
+            />
+          )}
+          {view === "billing" && mode === "demo" && (
+            <LocalSales
+              data={data}
+              actor={actor}
+              commit={async (...args) => saveDemo(...args)}
+              openOrder={(id) => {
+                setSelected(id);
+                nav("detail");
+              }}
+            />
+          )}
+          {view === "billing" && mode === "live" && (
             <section className="panel">
               <p className="eyebrow">PHASE 3</p>
               <h1>請求書作成</h1>

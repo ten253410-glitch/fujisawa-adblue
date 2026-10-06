@@ -137,7 +137,7 @@ test("endpoint rejects cross-origin requests and clearly reports missing configu
       }),
     );
     assert.equal(missing.status, 503);
-    assert.match((await missing.json()).error, /未設定/);
+    assert.match((await missing.json()).error, /停止|未設定/);
   } finally {
     if (key !== undefined) process.env.ADBLUE_OPENAI_API_KEY = key;
     if (model !== undefined) process.env.OPENAI_OCR_MODEL = model;

@@ -1299,3 +1299,58 @@ textarea::placeholder {
     width: 100%;
   }
 }
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+.table-scroll th,
+.table-scroll td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  vertical-align: top;
+}
+.table-scroll th {
+  font-size: 12px;
+  color: #526573;
+  background: #f4f8fa;
+}
+.table-scroll td small {
+  display: block;
+  font-size: 11px;
+  color: #607580;
+}
+.totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin: 20px 0;
+  padding: 18px;
+  background: #eef8f5;
+  border-radius: 12px;
+}
+.totals div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.totals strong {
+  font-size: 22px;
+}
+.site-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+.site-row small {
+  display: block;
+  color: #607580;
+}
