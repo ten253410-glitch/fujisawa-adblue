@@ -14,6 +14,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.90.0",
     "exceljs": "^4.4.0",
+    "fast-xml-parser": "^5.3.6",
+    "fflate": "^0.8.2",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
     "openai": "^7.28.0",

@@ -2,6 +2,7 @@ export type Customer = {
   id: string;
   name: string;
   company_name?: string;
+  billing_party_id?: string | null;
   contact: string;
   phone: string;
   address: string;
@@ -75,6 +76,11 @@ export type Data = {
   sites?: import("./local-flow").DeliverySite[];
   actuals?: import("./local-flow").LocalActual[];
   sales?: import("./local-flow").LocalSale[];
+  billingParties?: import("./billing").BillingParty[];
+  billingItems?: import("./billing").BillingItem[];
+  billingInvoices?: import("./billing").BillingInvoice[];
+  taxRules?: import("./billing").TaxRule[];
+  invoiceIssuer?: import("./billing").InvoiceIssuer;
   invoiceDrafts?: import("./history-import").DraftInvoice[];
   orderImages?: import("./order-import").SourceImage[];
 };

@@ -65,6 +65,8 @@ import {
   InvoiceWorkspace,
 } from "./components/history-workspace";
 
+import BillingWorkspace from "./components/billing-workspace";
+
 type View =
   | "home"
   | "customers"
@@ -77,7 +79,8 @@ type View =
   | "audit"
   | "backup"
   | "history-import"
-  | "invoices";
+  | "invoices"
+  | "billing-check";
 const demoKey = LOCAL_KEY;
 const fmt = (day: string) => (day ? day.replaceAll("-", "/") : "未定");
 const timestamp = (value: string) =>
@@ -237,7 +240,7 @@ export default function Workspace() {
       );
     const result = {
       ...next,
-      schema_version: 3,
+      schema_version: 4,
       local_revision: (data.local_revision ?? 0) + 1,
       audit: [
         {
@@ -347,7 +350,10 @@ export default function Workspace() {
         id: editing?.id ?? crypto.randomUUID(),
         name,
         ...(mode === "demo"
-          ? { company_name: String(f.get("company_name") || "").trim() }
+          ? {
+              company_name: String(f.get("company_name") || "").trim(),
+              billing_party_id: String(f.get("billing_party_id") || "") || null,
+            }
           : {}),
         contact: String(f.get("contact")).trim(),
         phone: String(f.get("phone")).trim(),
@@ -942,6 +948,9 @@ export default function Workspace() {
               <button className="secondary" onClick={() => nav("invoices")}>
                 月次検証請求書
               </button>
+              <button className="primary" onClick={() => nav("billing-check")}>
+                請求前チェック・請求書
+              </button>
             </div>
           )}
           {view === "home" && (
@@ -1193,6 +1202,23 @@ export default function Workspace() {
                             name="company_name"
                             defaultValue={editing?.company_name}
                           />
+                        </Field>
+                      )}
+                      {mode === "demo" && (
+                        <Field label="給液先企業の請求先">
+                          <select
+                            name="billing_party_id"
+                            defaultValue={editing?.billing_party_id || ""}
+                          >
+                            <option value="">未設定（実績確認時に指定）</option>
+                            {(data.billingParties || [])
+                              .filter((p) => p.active)
+                              .map((p) => (
+                                <option key={p.id} value={p.id}>
+                                  {p.internal_name} / {p.formal_name}
+                                </option>
+                              ))}
+                          </select>
                         </Field>
                       )}
                       <Field label="担当者">
@@ -2018,6 +2044,13 @@ export default function Workspace() {
                 )}
               </section>
             </>
+          )}
+          {view === "billing-check" && mode === "demo" && (
+            <BillingWorkspace
+              data={data}
+              actor={actor}
+              commit={async (...args) => saveDemo(...args)}
+            />
           )}
           {view === "history-import" && mode === "demo" && (
             <HistoryImport

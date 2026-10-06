@@ -378,6 +378,11 @@ export function registerHistory(
       order_id: id,
       actual_id: actual.id,
       customer_id: customerId,
+      billing_party_id:
+        next.sites!.find((s) => s.id === siteId)?.billing_party_id ||
+        next.customers.find((c) => c.id === customerId)?.billing_party_id ||
+        null,
+      transaction_category: "normal",
       delivered_on: r.day,
       quantity_l: r.quantity,
       unit_price_excl_tax: r.price,

@@ -1,0 +1,2654 @@
+{
+  "rows": [
+    {
+      "row": "5",
+      "day": "2026-08-04",
+      "destination": "EG八王子",
+      "group": "Schatz",
+      "quantity": "740",
+      "price": "65",
+      "batch": "SFS-0006",
+      "notes": "01案件",
+      "cached_amount": "48100",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-04",
+        "destination": "株式会社EG八王子",
+        "batch": "SFS0006",
+        "quantity": "740",
+        "price": "65",
+        "amount": null,
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "6",
+      "day": "2026-08-04",
+      "destination": "デイライン西東京営業所",
+      "group": "Schatz",
+      "quantity": "200",
+      "price": "65",
+      "batch": "SFS-0006",
+      "notes": "01案件",
+      "cached_amount": "13000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-04",
+        "destination": "株式会社デイライン ⻄東京営業所",
+        "batch": "SFS0006",
+        "quantity": "200",
+        "price": "65",
+        "amount": null,
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "7",
+      "day": "2026-08-04",
+      "destination": "ソーコー",
+      "group": "G.TRES",
+      "quantity": "830",
+      "price": "69",
+      "batch": "SFS-0006",
+      "notes": "吉田",
+      "cached_amount": "57270",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-04",
+        "destination": "株式会社ソーコー",
+        "batch": "SFS0006",
+        "quantity": "830",
+        "price": "69",
+        "amount": "57270",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "8",
+      "day": "2026-08-04",
+      "destination": "ﾊｲｴｽﾄﾄﾗﾝｽﾎﾟｰﾄ　八王子営業所",
+      "group": "G.TRES",
+      "quantity": "280",
+      "price": "69",
+      "batch": "SFS-0006",
+      "notes": "吉田",
+      "cached_amount": "19320",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-04",
+        "destination": "ハイエストトランスポート(株)八王子営業所 車庫",
+        "batch": "SFS0006",
+        "quantity": "280",
+        "price": "69",
+        "amount": "19320",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "9",
+      "day": "2026-08-04",
+      "destination": "ｼﾞｬﾊﾟﾝﾛｼﾞｺﾑ　相模原倉庫",
+      "group": "G.TRES",
+      "quantity": "900",
+      "price": "69",
+      "batch": "SFS-0006",
+      "notes": "吉田",
+      "cached_amount": "62100",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-04",
+        "destination": "ジャパンロジコム相模原倉庫",
+        "batch": "SFS0006",
+        "quantity": "900",
+        "price": "69",
+        "amount": "62100",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "10",
+      "day": "2026-08-04",
+      "destination": "佐川急便　厚木営業所",
+      "group": "inc Schatz",
+      "quantity": "200",
+      "price": "71",
+      "batch": "SFS-0006",
+      "notes": "佐川ｱﾄﾞﾊﾞﾝｽ依頼",
+      "cached_amount": "14200",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-04",
+        "destination": "佐川急便(株)厚木営業所",
+        "batch": "SFS0006",
+        "quantity": "200",
+        "price": "71",
+        "amount": "14200",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "11",
+      "day": "2026-08-04",
+      "destination": "英建",
+      "group": "inc Schatz",
+      "quantity": "400",
+      "price": "70",
+      "batch": "SFS-0006",
+      "notes": "モノタロウ依頼",
+      "cached_amount": "28000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-04",
+        "destination": "英建(株)",
+        "batch": "SFS0006",
+        "quantity": "400",
+        "price": "70",
+        "amount": "28000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "12",
+      "day": "2026-08-05",
+      "destination": "秀栄　相模原倉庫",
+      "group": "Schatz",
+      "quantity": "1000",
+      "price": "65",
+      "batch": "SFS-0007",
+      "notes": "01案件",
+      "cached_amount": "65000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-05",
+        "destination": "株式会社秀栄 相模原車庫",
+        "batch": "SFS0007",
+        "quantity": "1000",
+        "price": "65",
+        "amount": "65000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "17",
+      "day": "2026-08-05",
+      "destination": "TWS本牧",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "470",
+      "price": "90",
+      "batch": "SFS-0007",
+      "notes": null,
+      "cached_amount": "42300",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "TWS本牧",
+      "pdf": {
+        "day": "2026-08-05",
+        "destination": "TWS 本牧センター",
+        "batch": "SFS0007",
+        "quantity": "470",
+        "price": "90",
+        "amount": "42300",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "18",
+      "day": "2026-08-05",
+      "destination": "TWS平塚",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "480",
+      "price": "90",
+      "batch": "SFS-0007",
+      "notes": null,
+      "cached_amount": "43200",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "TWS平塚",
+      "pdf": {
+        "day": "2026-08-05",
+        "destination": "TWS 平塚センター",
+        "batch": "SFS0007",
+        "quantity": "480",
+        "price": "90",
+        "amount": "43200",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "19",
+      "day": "2026-08-05",
+      "destination": "TSS　愛川ｾﾝﾀｰ",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "430",
+      "price": "92",
+      "batch": "SFS-0007",
+      "notes": null,
+      "cached_amount": "39560",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "TSC愛川",
+      "pdf": {
+        "day": "2026-08-05",
+        "destination": "TSC 愛川センター",
+        "batch": "SFS0007",
+        "quantity": "430",
+        "price": "92",
+        "amount": "39560",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "21",
+      "day": "2026-08-06",
+      "destination": "大東実業厚木営業所①",
+      "group": "inc Schatz",
+      "quantity": "490",
+      "price": "68",
+      "batch": "SFS-0007",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "33320",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-06",
+        "destination": "大東実業(株)/厚木営業所1",
+        "batch": "SFS0007",
+        "quantity": "490",
+        "price": "68",
+        "amount": "33320",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "22",
+      "day": "2026-08-06",
+      "destination": "大東実業厚木営業所②",
+      "group": "inc Schatz",
+      "quantity": "840",
+      "price": "68",
+      "batch": "SFS-0007",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "57120",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-06",
+        "destination": "大東実業(株)/厚木営業所2",
+        "batch": "SFS0007",
+        "quantity": "840",
+        "price": "68",
+        "amount": "57120",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "23",
+      "day": "2026-08-06",
+      "destination": "EGL 高尾バイオマス",
+      "group": "inc Schatz",
+      "quantity": "640",
+      "price": "70",
+      "batch": "SFS-0007",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "44800",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-06",
+        "destination": "(株)EGL/高尾バイオマス",
+        "batch": "SFS0007",
+        "quantity": "640",
+        "price": "70",
+        "amount": "44800",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "24",
+      "day": "2026-08-06",
+      "destination": "丸伊運輸　日野営業所",
+      "group": "inc Schatz",
+      "quantity": "800",
+      "price": "70",
+      "batch": "SFS-0007",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "56000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-06",
+        "destination": "丸伊運輸(株)日野営業所",
+        "batch": "SFS0007",
+        "quantity": "800",
+        "price": "70",
+        "amount": "56000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "25",
+      "day": "2026-08-06",
+      "destination": "ｲｵﾝﾈｸｽﾄﾃﾞﾘﾊﾞﾘｰ　八王子営業所",
+      "group": "Schatz",
+      "quantity": "500",
+      "price": "65",
+      "batch": "SFS-0007",
+      "notes": "SBSﾌｧｲﾅﾝｽ依頼",
+      "cached_amount": "32500",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-06",
+        "destination": "イオンネクストデリバリー(株)八王子営業所",
+        "batch": "SFS0007",
+        "quantity": "500",
+        "price": "65",
+        "amount": "32500",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "26",
+      "day": "2026-08-06",
+      "destination": "立川運送　本社",
+      "group": "Schatz",
+      "quantity": "1000",
+      "price": "65",
+      "batch": "SFS-0007",
+      "notes": "ﾎﾞﾝﾄﾞﾎｰﾙﾃﾞｨﾝｸﾞｽ01",
+      "cached_amount": "65000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-06",
+        "destination": "立川運送株式会社 本社営業所",
+        "batch": "SFS0007",
+        "quantity": "1000",
+        "price": "65",
+        "amount": "65000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "27",
+      "day": "2026-08-06",
+      "destination": "暁運輸　伊勢原営業所",
+      "group": "G.TRES",
+      "quantity": "310",
+      "price": "63",
+      "batch": "SFS-0007",
+      "notes": "吉田",
+      "cached_amount": "19530",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-06",
+        "destination": "(株)暁運輸 伊勢原営業所",
+        "batch": "SFS0007",
+        "quantity": "310",
+        "price": "63",
+        "amount": "19530",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "28",
+      "day": "2026-08-06",
+      "destination": "暁運輸　伊勢原営業車庫",
+      "group": "G.TRES",
+      "quantity": "370",
+      "price": "63",
+      "batch": "SFS-0007",
+      "notes": "吉田",
+      "cached_amount": "23310",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-06",
+        "destination": "(株)暁運輸 伊勢原営業所 車庫",
+        "batch": "SFS0007",
+        "quantity": "370",
+        "price": "63",
+        "amount": "23310",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "29",
+      "day": "2026-08-07",
+      "destination": "丸祐商事　車庫",
+      "group": "G.TRES",
+      "quantity": "830",
+      "price": "69",
+      "batch": "SFS-0007",
+      "notes": "吉田",
+      "cached_amount": "57270",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-07",
+        "destination": "(株)丸祐商事 車庫",
+        "batch": "SFS0007",
+        "quantity": "830",
+        "price": "69",
+        "amount": "57270",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "30",
+      "day": "2026-08-07",
+      "destination": "アスカコーポレーション",
+      "group": "G.TRES",
+      "quantity": "800",
+      "price": "69",
+      "batch": "SFS-0007",
+      "notes": "吉田",
+      "cached_amount": "55200",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-07",
+        "destination": "(株)アスカコーポレーション",
+        "batch": "SFS0007",
+        "quantity": "800",
+        "price": "69",
+        "amount": "55200",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "31",
+      "day": "2026-08-07",
+      "destination": "大友ﾛｼﾞｽﾃｨｸｽｻｰﾋﾞｽ　厚木営業所",
+      "group": "G.TRES",
+      "quantity": "900",
+      "price": "69",
+      "batch": "SFS-0007",
+      "notes": "吉田",
+      "cached_amount": "62100",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-07",
+        "destination": "",
+        "batch": "SFS0007",
+        "quantity": "900",
+        "price": "69",
+        "amount": "62100",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "32",
+      "day": "2026-08-07",
+      "destination": "福島商事　湘南営業所",
+      "group": "G.TRES",
+      "quantity": "930",
+      "price": "64",
+      "batch": "SFS-0007",
+      "notes": "吉田",
+      "cached_amount": "59520",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-07",
+        "destination": "(株)福嶋商事 湘南営業所",
+        "batch": "SFS0007",
+        "quantity": "930",
+        "price": "64",
+        "amount": "59520",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "33",
+      "day": "2026-08-07",
+      "destination": "(有)岩湘",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "1000",
+      "price": "90",
+      "batch": "SFS-0007",
+      "notes": "石田電設",
+      "cached_amount": "90000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "石田電設",
+      "pdf": {
+        "day": "2026-08-07",
+        "destination": "(有)石田電設",
+        "batch": "SFS0007",
+        "quantity": "1000",
+        "price": "90",
+        "amount": "90000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "40",
+      "day": "2026-08-10",
+      "destination": "ﾖｺﾀｴﾝﾀｰﾌﾟﾗｲｽﾞ　神奈川営業所",
+      "group": "G.TRES",
+      "quantity": "460",
+      "price": "67",
+      "batch": "SFS-0007",
+      "notes": "吉田",
+      "cached_amount": "30820",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-10",
+        "destination": "(株)ヨコタエンタープライズ神奈川営業所",
+        "batch": "SFS0007",
+        "quantity": "460",
+        "price": "67",
+        "amount": "30820",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "41",
+      "day": "2026-08-10",
+      "destination": "成洋商事　厚木営業所",
+      "group": "inc Schatz",
+      "quantity": "590",
+      "price": "67",
+      "batch": "SFS-0007",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "39530",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-10",
+        "destination": "有限会社成洋商事/厚木営業所",
+        "batch": "SFS0007",
+        "quantity": "590",
+        "price": "67",
+        "amount": "39530",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "42",
+      "day": "2026-08-10",
+      "destination": "名糖運輸　厚木物流センター",
+      "group": "inc Schatz",
+      "quantity": "390",
+      "price": "68",
+      "batch": "SFS-0008",
+      "notes": "佐川ｱﾄﾞﾊﾞﾝｽ依頼",
+      "cached_amount": "26520",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-10",
+        "destination": "名糖運輸(株)厚木物流センター",
+        "batch": "SFS0008",
+        "quantity": "390",
+        "price": "68",
+        "amount": "26520",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "43",
+      "day": "2026-08-10",
+      "destination": "SBSｾﾞﾝﾂｳ　相模原",
+      "group": "Schatz",
+      "quantity": "400",
+      "price": "65",
+      "batch": "SFS-0008",
+      "notes": "SBSﾌｧｲﾅﾝｽ依頼",
+      "cached_amount": "26000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-10",
+        "destination": "SBSゼンツウ(株)相模原支店",
+        "batch": "SFS0008",
+        "quantity": "400",
+        "price": "65",
+        "amount": "26000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "44",
+      "day": "2026-08-17",
+      "destination": "東京ﾕﾆｵﾝ物流　伊奈平営業所",
+      "group": "Schatz",
+      "quantity": "440",
+      "price": "60",
+      "batch": "SFS-0008",
+      "notes": "KU-TRUCK&TYPE…依頼分",
+      "cached_amount": "26400",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-17",
+        "destination": "",
+        "batch": "SFS0008",
+        "quantity": "440",
+        "price": "60",
+        "amount": "26400",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "45",
+      "day": "2026-08-17",
+      "destination": "東京ｷｬﾘｲｻｰﾋﾞｽ　本社",
+      "group": "Schatz",
+      "quantity": "200",
+      "price": "65",
+      "batch": "SFS-0008",
+      "notes": "01案件",
+      "cached_amount": "13000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-17",
+        "destination": "株式会社東京キャリイサービス 本社営業所",
+        "batch": "SFS0008",
+        "quantity": "200",
+        "price": "65",
+        "amount": "13000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "46",
+      "day": "2026-08-17",
+      "destination": "ﾀﾏ･ﾐﾙｷｰｳｪｲ　本社",
+      "group": "Schatz",
+      "quantity": "900",
+      "price": "65",
+      "batch": "SFS-0008",
+      "notes": "01案件",
+      "cached_amount": "58500",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-17",
+        "destination": "(株)タマ・ミルキーウェイ",
+        "batch": "SFS0008",
+        "quantity": "900",
+        "price": "65",
+        "amount": "58500",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "47",
+      "day": "2026-08-17",
+      "destination": "神戸運輸",
+      "group": "Schatz",
+      "quantity": "190",
+      "price": "65",
+      "batch": "SFS-0008",
+      "notes": "01案件",
+      "cached_amount": "12350",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-17",
+        "destination": "(株)神戶運輸",
+        "batch": "SFS0008",
+        "quantity": "190",
+        "price": "65",
+        "amount": "12350",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "48",
+      "day": "2026-08-17",
+      "destination": "三多摩生コン輸送",
+      "group": "Schatz",
+      "quantity": "550",
+      "price": "70",
+      "batch": "SFS-0008",
+      "notes": "",
+      "cached_amount": "38500",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-17",
+        "destination": "有限会社 三多摩生コン輸送",
+        "batch": "SFS0008",
+        "quantity": "550",
+        "price": "70",
+        "amount": "38500",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "49",
+      "day": "2026-08-17",
+      "destination": "丸伊運輸　日野営業所",
+      "group": "inc Schatz",
+      "quantity": "680",
+      "price": "70",
+      "batch": "SFS-0008",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "47600",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-17",
+        "destination": "丸伊運輸(株)日野営業所",
+        "batch": "SFS0008",
+        "quantity": "680",
+        "price": "70",
+        "amount": "47600",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "50",
+      "day": "2026-08-17",
+      "destination": "関東総合設備工事",
+      "group": "",
+      "quantity": "200",
+      "price": "175",
+      "batch": "SFS-0008",
+      "notes": "BIB20L×10ｹ",
+      "cached_amount": "35000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "関東総合設備",
+      "pdf": {
+        "day": "2026-08-17",
+        "destination": "関東総合設備工事株式会社",
+        "batch": "SFS0008",
+        "quantity": "10",
+        "price": "3500",
+        "amount": "35000",
+        "packing": "BIB(20L)"
+      }
+    },
+    {
+      "row": "53",
+      "day": "2026-08-18",
+      "destination": "サンライズ　厚木支店",
+      "group": "Schatz",
+      "quantity": "460",
+      "price": "68",
+      "batch": "SFS-0008",
+      "notes": "岐昇依頼分",
+      "cached_amount": "31280",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "岐昇",
+      "pdf": {
+        "day": "2026-08-17",
+        "destination": "(株)サンライズ 厚木支店",
+        "batch": "SFS0008",
+        "quantity": "460",
+        "price": "68",
+        "amount": "31280",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "54",
+      "day": "2026-08-18",
+      "destination": "佐川急便　厚木営業所",
+      "group": "inc Schatz",
+      "quantity": "100",
+      "price": "71",
+      "batch": "SFS-0008",
+      "notes": "佐川ｱﾄﾞﾊﾞﾝｽ依頼",
+      "cached_amount": "7100",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-18",
+        "destination": "佐川急便(株)厚木営業所",
+        "batch": "SFS0008",
+        "quantity": "100",
+        "price": "71",
+        "amount": "7100",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "55",
+      "day": "2026-08-18",
+      "destination": "躍進運輸　厚木営業所",
+      "group": "inc Schatz",
+      "quantity": "640",
+      "price": "70",
+      "batch": "SFS-0008",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "44800",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-18",
+        "destination": "躍進運輸株式会社厚木営業所",
+        "batch": "SFS0008",
+        "quantity": "640",
+        "price": "70",
+        "amount": "44800",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "56",
+      "day": "2026-08-18",
+      "destination": "TSS　愛川ｾﾝﾀｰ",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "170",
+      "price": "92",
+      "batch": "SFS-0008",
+      "notes": "",
+      "cached_amount": "15640",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "TSC愛川",
+      "pdf": {
+        "day": "2026-08-19",
+        "destination": "TSC 愛川センター",
+        "batch": "SFS0008",
+        "quantity": "170",
+        "price": "92",
+        "amount": "15640",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "57",
+      "day": "2026-08-18",
+      "destination": "TWS本牧",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "550",
+      "price": "90",
+      "batch": "SFS-0008",
+      "notes": "",
+      "cached_amount": "49500",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "TWS本牧",
+      "pdf": {
+        "day": "2026-08-19",
+        "destination": "TWS 本牧センター",
+        "batch": "SFS0008",
+        "quantity": "550",
+        "price": "90",
+        "amount": "49500",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "58",
+      "day": "2026-08-18",
+      "destination": "TWS平塚",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "430",
+      "price": "90",
+      "batch": "SFS-0008",
+      "notes": "",
+      "cached_amount": "38700",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "TWS平塚",
+      "pdf": {
+        "day": "2026-08-19",
+        "destination": "TWS 平塚センター",
+        "batch": "SFS0008",
+        "quantity": "430",
+        "price": "90",
+        "amount": "38700",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "59",
+      "day": "2026-08-19",
+      "destination": "加藤商事",
+      "group": "Schatz",
+      "quantity": "200",
+      "price": "70",
+      "batch": "SFS-0008",
+      "notes": "ｺｽﾓﾄﾚｰﾄﾞｱﾝﾄﾞｻｰﾋﾞｽ依頼分",
+      "cached_amount": "14000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-19",
+        "destination": "加藤商事株式会社",
+        "batch": "SFS0008",
+        "quantity": "200",
+        "price": "70",
+        "amount": "14000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "60",
+      "day": "2026-08-19",
+      "destination": "國昭企画",
+      "group": "Schatz",
+      "quantity": "600",
+      "price": "65",
+      "batch": "SFS-0008",
+      "notes": "ﾓﾘｶﾜ商事01依頼",
+      "cached_amount": "39000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-19",
+        "destination": "株式会社國昭企画",
+        "batch": "SFS0008",
+        "quantity": "600",
+        "price": "65",
+        "amount": "39000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "61",
+      "day": "2026-08-19",
+      "destination": "ﾆｯﾎﾟﾝﾛｼﾞ　神奈川流通センター",
+      "group": "Schatz",
+      "quantity": "650",
+      "price": "65",
+      "batch": "SFS-0008",
+      "notes": "ﾎﾞﾝﾄﾞﾎｰﾙﾃﾞｨﾝｸﾞｽ01",
+      "cached_amount": "42250",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-19",
+        "destination": "ニッポンロジ株式会社 神奈川流通センター",
+        "batch": "SFS0008",
+        "quantity": "650",
+        "price": "65",
+        "amount": "42250",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "66",
+      "day": "2026-08-20",
+      "destination": "厚木共同",
+      "group": "G.TRES",
+      "quantity": "900",
+      "price": "69",
+      "batch": "SFS-0008",
+      "notes": "吉田",
+      "cached_amount": "62100",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-20",
+        "destination": "厚木共同",
+        "batch": "SFS0008",
+        "quantity": "900",
+        "price": "69",
+        "amount": "62100",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "67",
+      "day": "2026-08-20",
+      "destination": "明鶴流通　厚木車庫",
+      "group": "G.TRES",
+      "quantity": "850",
+      "price": "69",
+      "batch": "SFS-0008",
+      "notes": "吉田",
+      "cached_amount": "58650",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-20",
+        "destination": "(有)明鶴流通厚木車庫",
+        "batch": "SFS0008",
+        "quantity": "850",
+        "price": "69",
+        "amount": "58650",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "69",
+      "day": "2026-08-20",
+      "destination": "松木商事",
+      "group": "G.TRES",
+      "quantity": "400",
+      "price": "69",
+      "batch": "SFS-0008",
+      "notes": "吉田",
+      "cached_amount": "27600",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-20",
+        "destination": "(株)松木商事",
+        "batch": "SFS0008",
+        "quantity": "400",
+        "price": "69",
+        "amount": "27600",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "70",
+      "day": "2026-08-20",
+      "destination": "暁運輸　伊勢原営業車庫",
+      "group": "G.TRES",
+      "quantity": "330",
+      "price": "63",
+      "batch": "SFS-0008",
+      "notes": "吉田",
+      "cached_amount": "20790",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-20",
+        "destination": "(株)暁運輸 伊勢原営業所 車庫",
+        "batch": "SFS0008",
+        "quantity": "330",
+        "price": "63",
+        "amount": "20790",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "71",
+      "day": "2026-08-20",
+      "destination": "暁運輸　伊勢原営業所",
+      "group": "G.TRES",
+      "quantity": "250",
+      "price": "63",
+      "batch": "SFS-0008",
+      "notes": "吉田",
+      "cached_amount": "15750",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-20",
+        "destination": "(株)暁運輸 伊勢原営業所",
+        "batch": "SFS0008",
+        "quantity": "250",
+        "price": "63",
+        "amount": "15750",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "72",
+      "day": "2026-08-20",
+      "destination": "富士運輸　神奈川営業所",
+      "group": "Schatz",
+      "quantity": "470",
+      "price": "67",
+      "batch": "SFS-0008",
+      "notes": "",
+      "cached_amount": "31490",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-20",
+        "destination": "富士運輸(株)神奈川営業所",
+        "batch": "SFS0008",
+        "quantity": "470",
+        "price": "67",
+        "amount": "31490",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "73",
+      "day": "2026-08-25",
+      "destination": "神都輸送",
+      "group": "G.TRES",
+      "quantity": "870",
+      "price": "69",
+      "batch": "SFS-0009",
+      "notes": "吉田",
+      "cached_amount": "60030",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-25",
+        "destination": "(有)神都輸送",
+        "batch": "SFS0009",
+        "quantity": "870",
+        "price": "69",
+        "amount": "60030",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "74",
+      "day": "2026-08-25",
+      "destination": "第一石産運輸　檜原工場",
+      "group": "G.TRES",
+      "quantity": "1100",
+      "price": "69",
+      "batch": "SFS-0009",
+      "notes": "",
+      "cached_amount": "75900",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-25",
+        "destination": "第一石産運輸(株)檜原工場",
+        "batch": "SFS0009",
+        "quantity": "1100",
+        "price": "69",
+        "amount": "75900",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "75",
+      "day": "2026-08-25",
+      "destination": "ｼﾞｬﾊﾟﾝﾛｼﾞｺﾑ　相模原倉庫",
+      "group": "G.TRES",
+      "quantity": "600",
+      "price": "69",
+      "batch": "SFS-0008",
+      "notes": "吉田",
+      "cached_amount": "41400",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-25",
+        "destination": "ジャパンロジコム相模原倉庫",
+        "batch": "SFS0008",
+        "quantity": "600",
+        "price": "69",
+        "amount": "41400",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "76",
+      "day": "2026-08-25",
+      "destination": "ﾖｺﾀｴﾝﾀｰﾌﾟﾗｲｽﾞ　神奈川営業所",
+      "group": "G.TRES",
+      "quantity": "430",
+      "price": "67",
+      "batch": "SFS-0008",
+      "notes": "吉田",
+      "cached_amount": "28810",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-25",
+        "destination": "(株)ヨコタエンタープライズ神奈川営業所",
+        "batch": "SFS0008",
+        "quantity": "430",
+        "price": "67",
+        "amount": "28810",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "77",
+      "day": "2026-08-25",
+      "destination": "湘南東海運輸　本社",
+      "group": "G.TRES",
+      "quantity": "1950",
+      "price": "69",
+      "batch": "SFS-0008",
+      "notes": "吉田",
+      "cached_amount": "134550",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-25",
+        "destination": "湘南東海運輸株式会社本社",
+        "batch": "SFS0008",
+        "quantity": "1950",
+        "price": "69",
+        "amount": "134550",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "78",
+      "day": "2026-08-25",
+      "destination": "ﾋｭｰﾃｯｸﾉｵﾘﾝ　神奈川JDｾﾝﾀｰ",
+      "group": "inc Schatz",
+      "quantity": "570",
+      "price": "68",
+      "batch": "SFS-0008",
+      "notes": "佐川ｱﾄﾞﾊﾞﾝｽ依頼",
+      "cached_amount": "38760",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-25",
+        "destination": "株式会社ヒューテックノオリン/神奈川JDセンター",
+        "batch": "SFS0008",
+        "quantity": "570",
+        "price": "68",
+        "amount": "38760",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "80",
+      "day": "2026-08-26",
+      "destination": "名糖運輸　厚木物流センター",
+      "group": "inc Schatz",
+      "quantity": "500",
+      "price": "68",
+      "batch": "SFS-0009",
+      "notes": "佐川ｱﾄﾞﾊﾞﾝｽ依頼",
+      "cached_amount": "34000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-26",
+        "destination": "名糖運輸(株)厚木物流センター",
+        "batch": "SFS0009",
+        "quantity": "500",
+        "price": "68",
+        "amount": "34000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "81",
+      "day": "2026-08-26",
+      "destination": "織戸組　松田事業所",
+      "group": "Schatz",
+      "quantity": "1000",
+      "price": "65",
+      "batch": "SFS-0009",
+      "notes": "三谷商事01案件",
+      "cached_amount": "65000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-26",
+        "destination": "株式会社織戶組 松田事業所",
+        "batch": "SFS0009",
+        "quantity": "1000",
+        "price": "65",
+        "amount": "65000",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "86",
+      "day": "2026-08-26",
+      "destination": "TWS本牧",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "490",
+      "price": "90",
+      "batch": "SFS-0009",
+      "notes": null,
+      "cached_amount": "44100",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "TWS本牧",
+      "pdf": {
+        "day": "2026-08-26",
+        "destination": "TWS 本牧センター",
+        "batch": "SFS0009",
+        "quantity": "490",
+        "price": "90",
+        "amount": "44100",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "87",
+      "day": "2026-08-26",
+      "destination": "TWS平塚",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "570",
+      "price": "90",
+      "batch": "SFS-0009",
+      "notes": null,
+      "cached_amount": "51300",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "TWS平塚",
+      "pdf": {
+        "day": "2026-08-26",
+        "destination": "TWS 平塚センター",
+        "batch": "SFS0009",
+        "quantity": "570",
+        "price": "90",
+        "amount": "51300",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "88",
+      "day": "2026-08-26",
+      "destination": "TSS　戸塚ｾﾝﾀｰ",
+      "group": "用田 ｻﾑﾗｲ",
+      "quantity": "560",
+      "price": "92",
+      "batch": "SFS-0009",
+      "notes": null,
+      "cached_amount": "51520",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "トヨタ戸塚",
+      "pdf": {
+        "day": "2026-08-26",
+        "destination": "トヨタサービスセンター神奈川 戶塚センター",
+        "batch": "SFS0009",
+        "quantity": "560",
+        "price": "92",
+        "amount": "51520",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "90",
+      "day": "2026-08-27",
+      "destination": "起立",
+      "group": "G.TRES",
+      "quantity": "170",
+      "price": "69",
+      "batch": "SFS-0009",
+      "notes": "吉田",
+      "cached_amount": "11730",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-27",
+        "destination": "(株)起立",
+        "batch": "SFS0009",
+        "quantity": "170",
+        "price": "69",
+        "amount": "11730",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "91",
+      "day": "2026-08-27",
+      "destination": "えびす興運　厚木営業所",
+      "group": "G.TRES",
+      "quantity": "600",
+      "price": "69",
+      "batch": "SFS-0009",
+      "notes": "吉田",
+      "cached_amount": "41400",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-27",
+        "destination": "えびす興運(有)厚木営業所",
+        "batch": "SFS0009",
+        "quantity": "600",
+        "price": "69",
+        "amount": "41400",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "92",
+      "day": "2026-08-27",
+      "destination": "豊島梱包運輸　羽村車庫",
+      "group": "G.TRES",
+      "quantity": "630",
+      "price": "69",
+      "batch": "SFS-0009",
+      "notes": "吉田",
+      "cached_amount": "43470",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "G.TRES",
+      "pdf": {
+        "day": "2026-08-27",
+        "destination": "豊島梱包運輸(株)羽村車庫",
+        "batch": "SFS0009",
+        "quantity": "630",
+        "price": "69",
+        "amount": "43470",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "93",
+      "day": "2026-08-27",
+      "destination": "薬工ロジシステム　厚木営業所",
+      "group": "晃永",
+      "quantity": "750",
+      "price": "70",
+      "batch": "SFS-0009",
+      "notes": null,
+      "cached_amount": "52500",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz_個別",
+      "pdf": {
+        "day": "2026-08-27",
+        "destination": "薬工ロジシステム株式会社厚木営業所",
+        "batch": "SFS0009",
+        "quantity": "750",
+        "price": "70",
+        "amount": "52500",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "94",
+      "day": "2026-08-27",
+      "destination": "ラミックス　厚木分配センター",
+      "group": "Schatz",
+      "quantity": "590",
+      "price": "70",
+      "batch": "SFS-0009",
+      "notes": null,
+      "cached_amount": "41300",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz",
+      "pdf": {
+        "day": "2026-08-27",
+        "destination": "株式会社ラミックス 厚木分配センター",
+        "batch": "SFS0009",
+        "quantity": "590",
+        "price": "70",
+        "amount": "41300",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "95",
+      "day": "2026-08-27",
+      "destination": "丸伊運輸　日野営業所",
+      "group": "inc Schatz",
+      "quantity": "680",
+      "price": "70",
+      "batch": "SFS-0009",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "47600",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-27",
+        "destination": "丸伊運輸(株)日野営業所",
+        "batch": "SFS0009",
+        "quantity": "680",
+        "price": "70",
+        "amount": "47600",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "96",
+      "day": "2026-08-27",
+      "destination": "大東実業厚木営業所②",
+      "group": "inc Schatz",
+      "quantity": "700",
+      "price": "68",
+      "batch": "SFS-0009",
+      "notes": "ｷﾀｼｮｰ",
+      "cached_amount": "47600",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-27",
+        "destination": "大東実業(株)/厚木営業所2",
+        "batch": "SFS0009",
+        "quantity": "700",
+        "price": "68",
+        "amount": "47600",
+        "packing": "給液"
+      }
+    },
+    {
+      "row": "97",
+      "day": "2026-08-28",
+      "destination": "ｳｲﾙﾌﾟﾗｽｴﾝﾊﾝｽ ｼﾞｬｶﾞｰ･ﾗﾝﾄﾞﾛｰﾊﾞｰ湘南",
+      "group": "inc Schatz",
+      "quantity": "400",
+      "price": "70",
+      "batch": "SFS-0009",
+      "notes": "モノタロウ",
+      "cached_amount": "28000",
+      "formula_columns": [
+        "J"
+      ],
+      "bill": "Schatz inc",
+      "pdf": {
+        "day": "2026-08-28",
+        "destination": "ウィルプラスエンハンス(株)ジャガー・ランドローバー湘南サービス",
+        "batch": "SFS0009",
+        "quantity": "400",
+        "price": "70",
+        "amount": "28000",
+        "packing": "給液"
+      }
+    }
+  ],
+  "bills": [
+    {
+      "id": "Schatz_個別",
+      "formal": "晃永運輸株式会社",
+      "address": "山形県天童市石鳥居一丁目1-28",
+      "lines": [
+        {
+          "day": "2026-08-27",
+          "destination": "薬工ロジシステム株式会社厚木営業所",
+          "batch": "SFS0009",
+          "quantity": "750",
+          "price": "70",
+          "amount": "52500",
+          "packing": "給液"
+        }
+      ],
+      "net": "52500",
+      "tax": "5250",
+      "gross": "57750",
+      "page": 2
+    },
+    {
+      "id": "トヨタ戸塚",
+      "formal": "トヨタサービスセンター神奈川株式会社 戶塚センター",
+      "address": "神奈川県横浜市戶塚区平戶町5427",
+      "lines": [
+        {
+          "day": "2026-08-26",
+          "destination": "トヨタサービスセンター神奈川 戶塚センター",
+          "batch": "SFS0009",
+          "quantity": "560",
+          "price": "92",
+          "amount": "51520",
+          "packing": "給液"
+        }
+      ],
+      "net": "51520",
+      "tax": "5152",
+      "gross": "56672",
+      "page": 3
+    },
+    {
+      "id": "岐昇",
+      "formal": "株式会社岐昇",
+      "address": "岐阜県各務原市蘇原瑞穂町3丁目25番地",
+      "lines": [
+        {
+          "day": "2026-08-17",
+          "destination": "(株)サンライズ 厚木支店",
+          "batch": "SFS0008",
+          "quantity": "460",
+          "price": "68",
+          "amount": "31280",
+          "packing": "給液"
+        }
+      ],
+      "net": "31280",
+      "tax": "3128",
+      "gross": "34408",
+      "page": 4
+    },
+    {
+      "id": "関東総合設備",
+      "formal": "関東総合設備工事株式会社",
+      "address": "東京都日野市東豊田4-20-22",
+      "lines": [
+        {
+          "day": "2026-08-17",
+          "destination": "関東総合設備工事株式会社",
+          "batch": "SFS0008",
+          "quantity": "10",
+          "price": "3500",
+          "amount": "35000",
+          "packing": "BIB(20L)"
+        }
+      ],
+      "net": "35000",
+      "tax": "3500",
+      "gross": "38500",
+      "page": 5
+    },
+    {
+      "id": "石田電設",
+      "formal": "有限会社岩湘",
+      "address": "神奈川県平塚市明石町6-17",
+      "lines": [
+        {
+          "day": "2026-08-07",
+          "destination": "(有)石田電設",
+          "batch": "SFS0007",
+          "quantity": "1000",
+          "price": "90",
+          "amount": "90000",
+          "packing": "給液"
+        }
+      ],
+      "net": "90000",
+      "tax": "9000",
+      "gross": "99000",
+      "page": 6
+    },
+    {
+      "id": "TSC愛川",
+      "formal": "トヨタサービスセンター神奈川株式会社",
+      "address": "神奈川県愛甲郡愛川町角田507",
+      "lines": [
+        {
+          "day": "2026-08-05",
+          "destination": "TSC 愛川センター",
+          "batch": "SFS0007",
+          "quantity": "430",
+          "price": "92",
+          "amount": "39560",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-19",
+          "destination": "TSC 愛川センター",
+          "batch": "SFS0008",
+          "quantity": "170",
+          "price": "92",
+          "amount": "15640",
+          "packing": "給液"
+        }
+      ],
+      "net": "55200",
+      "tax": "5520",
+      "gross": "60720",
+      "page": 7
+    },
+    {
+      "id": "TWS平塚",
+      "formal": "トヨタウエインズグループサービス株式会社 平塚センター",
+      "address": "神奈川県平塚市田村4-1-11",
+      "lines": [
+        {
+          "day": "2026-08-05",
+          "destination": "TWS 平塚センター",
+          "batch": "SFS0007",
+          "quantity": "480",
+          "price": "90",
+          "amount": "43200",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-19",
+          "destination": "TWS 平塚センター",
+          "batch": "SFS0008",
+          "quantity": "430",
+          "price": "90",
+          "amount": "38700",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-26",
+          "destination": "TWS 平塚センター",
+          "batch": "SFS0009",
+          "quantity": "570",
+          "price": "90",
+          "amount": "51300",
+          "packing": "給液"
+        }
+      ],
+      "net": "133200",
+      "tax": "13320",
+      "gross": "146520",
+      "page": 8
+    },
+    {
+      "id": "TWS本牧",
+      "formal": "トヨタウエインズグループサービス株式会社 本牧センター",
+      "address": "神奈川県横浜市中区豊浦町5",
+      "lines": [
+        {
+          "day": "2026-08-05",
+          "destination": "TWS 本牧センター",
+          "batch": "SFS0007",
+          "quantity": "470",
+          "price": "90",
+          "amount": "42300",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-19",
+          "destination": "TWS 本牧センター",
+          "batch": "SFS0008",
+          "quantity": "550",
+          "price": "90",
+          "amount": "49500",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-26",
+          "destination": "TWS 本牧センター",
+          "batch": "SFS0009",
+          "quantity": "490",
+          "price": "90",
+          "amount": "44100",
+          "packing": "給液"
+        }
+      ],
+      "net": "135900",
+      "tax": "13590",
+      "gross": "149490",
+      "page": 9
+    },
+    {
+      "id": "G.TRES",
+      "formal": "株式会社 G.TRES テラファクトリー",
+      "address": "香川県高松市香川町川東上2404­1",
+      "lines": [
+        {
+          "day": "2026-08-04",
+          "destination": "ハイエストトランスポート(株)八王子営業所 車庫",
+          "batch": "SFS0006",
+          "quantity": "280",
+          "price": "69",
+          "amount": "19320",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-04",
+          "destination": "株式会社ソーコー",
+          "batch": "SFS0006",
+          "quantity": "830",
+          "price": "69",
+          "amount": "57270",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-04",
+          "destination": "ジャパンロジコム相模原倉庫",
+          "batch": "SFS0006",
+          "quantity": "900",
+          "price": "69",
+          "amount": "62100",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-06",
+          "destination": "(株)暁運輸 伊勢原営業所 車庫",
+          "batch": "SFS0007",
+          "quantity": "370",
+          "price": "63",
+          "amount": "23310",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-06",
+          "destination": "(株)暁運輸 伊勢原営業所",
+          "batch": "SFS0007",
+          "quantity": "310",
+          "price": "63",
+          "amount": "19530",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-07",
+          "destination": "(株)アスカコーポレーション",
+          "batch": "SFS0007",
+          "quantity": "800",
+          "price": "69",
+          "amount": "55200",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-07",
+          "destination": "",
+          "batch": "SFS0007",
+          "quantity": "900",
+          "price": "69",
+          "amount": "62100",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-07",
+          "destination": "(株)丸祐商事 車庫",
+          "batch": "SFS0007",
+          "quantity": "830",
+          "price": "69",
+          "amount": "57270",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-07",
+          "destination": "(株)福嶋商事 湘南営業所",
+          "batch": "SFS0007",
+          "quantity": "930",
+          "price": "64",
+          "amount": "59520",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-10",
+          "destination": "(株)ヨコタエンタープライズ神奈川営業所",
+          "batch": "SFS0007",
+          "quantity": "460",
+          "price": "67",
+          "amount": "30820",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-20",
+          "destination": "(有)明鶴流通厚木車庫",
+          "batch": "SFS0008",
+          "quantity": "850",
+          "price": "69",
+          "amount": "58650",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-20",
+          "destination": "厚木共同",
+          "batch": "SFS0008",
+          "quantity": "900",
+          "price": "69",
+          "amount": "62100",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-20",
+          "destination": "(株)松木商事",
+          "batch": "SFS0008",
+          "quantity": "400",
+          "price": "69",
+          "amount": "27600",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-20",
+          "destination": "(株)暁運輸 伊勢原営業所 車庫",
+          "batch": "SFS0008",
+          "quantity": "330",
+          "price": "63",
+          "amount": "20790",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-20",
+          "destination": "(株)暁運輸 伊勢原営業所",
+          "batch": "SFS0008",
+          "quantity": "250",
+          "price": "63",
+          "amount": "15750",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-25",
+          "destination": "第一石産運輸(株)檜原工場",
+          "batch": "SFS0009",
+          "quantity": "1100",
+          "price": "69",
+          "amount": "75900",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-25",
+          "destination": "(有)神都輸送",
+          "batch": "SFS0009",
+          "quantity": "870",
+          "price": "69",
+          "amount": "60030",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-25",
+          "destination": "湘南東海運輸株式会社本社",
+          "batch": "SFS0008",
+          "quantity": "1950",
+          "price": "69",
+          "amount": "134550",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-25",
+          "destination": "ジャパンロジコム相模原倉庫",
+          "batch": "SFS0008",
+          "quantity": "600",
+          "price": "69",
+          "amount": "41400",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-25",
+          "destination": "(株)ヨコタエンタープライズ神奈川営業所",
+          "batch": "SFS0008",
+          "quantity": "430",
+          "price": "67",
+          "amount": "28810",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-27",
+          "destination": "豊島梱包運輸(株)羽村車庫",
+          "batch": "SFS0009",
+          "quantity": "630",
+          "price": "69",
+          "amount": "43470",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-27",
+          "destination": "(株)起立",
+          "batch": "SFS0009",
+          "quantity": "170",
+          "price": "69",
+          "amount": "11730",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-27",
+          "destination": "えびす興運(有)厚木営業所",
+          "batch": "SFS0009",
+          "quantity": "600",
+          "price": "69",
+          "amount": "41400",
+          "packing": "給液"
+        }
+      ],
+      "net": "1073218",
+      "tax": "107321",
+      "gross": "1180539",
+      "page": 10
+    },
+    {
+      "id": "Schatz inc",
+      "formal": "株式会社 Schatz inc",
+      "address": "宮城県仙台市宮城野区岩切谷地15番地9",
+      "lines": [
+        {
+          "day": "2026-08-04",
+          "destination": "佐川急便(株)厚木営業所",
+          "batch": "SFS0006",
+          "quantity": "200",
+          "price": "71",
+          "amount": "14200",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-04",
+          "destination": "英建(株)",
+          "batch": "SFS0006",
+          "quantity": "400",
+          "price": "70",
+          "amount": "28000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-06",
+          "destination": "大東実業(株)/厚木営業所2",
+          "batch": "SFS0007",
+          "quantity": "840",
+          "price": "68",
+          "amount": "57120",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-06",
+          "destination": "大東実業(株)/厚木営業所1",
+          "batch": "SFS0007",
+          "quantity": "490",
+          "price": "68",
+          "amount": "33320",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-06",
+          "destination": "丸伊運輸(株)日野営業所",
+          "batch": "SFS0007",
+          "quantity": "800",
+          "price": "70",
+          "amount": "56000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-06",
+          "destination": "(株)EGL/高尾バイオマス",
+          "batch": "SFS0007",
+          "quantity": "640",
+          "price": "70",
+          "amount": "44800",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-10",
+          "destination": "有限会社成洋商事/厚木営業所",
+          "batch": "SFS0007",
+          "quantity": "590",
+          "price": "67",
+          "amount": "39530",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-10",
+          "destination": "名糖運輸(株)厚木物流センター",
+          "batch": "SFS0008",
+          "quantity": "390",
+          "price": "68",
+          "amount": "26520",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-17",
+          "destination": "丸伊運輸(株)日野営業所",
+          "batch": "SFS0008",
+          "quantity": "680",
+          "price": "70",
+          "amount": "47600",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-18",
+          "destination": "佐川急便(株)厚木営業所",
+          "batch": "SFS0008",
+          "quantity": "100",
+          "price": "71",
+          "amount": "7100",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-18",
+          "destination": "躍進運輸株式会社厚木営業所",
+          "batch": "SFS0008",
+          "quantity": "640",
+          "price": "70",
+          "amount": "44800",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-25",
+          "destination": "株式会社ヒューテックノオリン/神奈川JDセンター",
+          "batch": "SFS0008",
+          "quantity": "570",
+          "price": "68",
+          "amount": "38760",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-26",
+          "destination": "名糖運輸(株)厚木物流センター",
+          "batch": "SFS0009",
+          "quantity": "500",
+          "price": "68",
+          "amount": "34000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-27",
+          "destination": "大東実業(株)/厚木営業所2",
+          "batch": "SFS0009",
+          "quantity": "700",
+          "price": "68",
+          "amount": "47600",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-27",
+          "destination": "丸伊運輸(株)日野営業所",
+          "batch": "SFS0009",
+          "quantity": "680",
+          "price": "70",
+          "amount": "47600",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-28",
+          "destination": "ウィルプラスエンハンス(株)ジャガー・ランドローバー湘南サービス",
+          "batch": "SFS0009",
+          "quantity": "400",
+          "price": "70",
+          "amount": "28000",
+          "packing": "給液"
+        }
+      ],
+      "net": "594950",
+      "tax": "59495",
+      "gross": "654445",
+      "page": 11
+    },
+    {
+      "id": "内部",
+      "formal": "仕入・自等家",
+      "address": "",
+      "lines": [],
+      "net": "0",
+      "tax": "0",
+      "gross": "0",
+      "page": 12
+    },
+    {
+      "id": "Schatz",
+      "formal": "株式会社 Schatz",
+      "address": "東京都江東区⻘海2-7-4 the SOHO 404",
+      "lines": [
+        {
+          "day": "2026-08-04",
+          "destination": "株式会社デイライン ⻄東京営業所",
+          "batch": "SFS0006",
+          "quantity": "200",
+          "price": "65",
+          "amount": null,
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-04",
+          "destination": "株式会社EG八王子",
+          "batch": "SFS0006",
+          "quantity": "740",
+          "price": "65",
+          "amount": null,
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-05",
+          "destination": "株式会社秀栄 相模原車庫",
+          "batch": "SFS0007",
+          "quantity": "1000",
+          "price": "65",
+          "amount": "65000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-06",
+          "destination": "イオンネクストデリバリー(株)八王子営業所",
+          "batch": "SFS0007",
+          "quantity": "500",
+          "price": "65",
+          "amount": "32500",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-06",
+          "destination": "立川運送株式会社 本社営業所",
+          "batch": "SFS0007",
+          "quantity": "1000",
+          "price": "65",
+          "amount": "65000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-10",
+          "destination": "SBSゼンツウ(株)相模原支店",
+          "batch": "SFS0008",
+          "quantity": "400",
+          "price": "65",
+          "amount": "26000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-17",
+          "destination": "",
+          "batch": "SFS0008",
+          "quantity": "440",
+          "price": "60",
+          "amount": "26400",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-17",
+          "destination": "有限会社 三多摩生コン輸送",
+          "batch": "SFS0008",
+          "quantity": "550",
+          "price": "70",
+          "amount": "38500",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-17",
+          "destination": "(株)タマ・ミルキーウェイ",
+          "batch": "SFS0008",
+          "quantity": "900",
+          "price": "65",
+          "amount": "58500",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-17",
+          "destination": "(株)神戶運輸",
+          "batch": "SFS0008",
+          "quantity": "190",
+          "price": "65",
+          "amount": "12350",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-17",
+          "destination": "株式会社東京キャリイサービス 本社営業所",
+          "batch": "SFS0008",
+          "quantity": "200",
+          "price": "65",
+          "amount": "13000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-19",
+          "destination": "ニッポンロジ株式会社 神奈川流通センター",
+          "batch": "SFS0008",
+          "quantity": "650",
+          "price": "65",
+          "amount": "42250",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-19",
+          "destination": "加藤商事株式会社",
+          "batch": "SFS0008",
+          "quantity": "200",
+          "price": "70",
+          "amount": "14000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-19",
+          "destination": "株式会社國昭企画",
+          "batch": "SFS0008",
+          "quantity": "600",
+          "price": "65",
+          "amount": "39000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-20",
+          "destination": "富士運輸(株)神奈川営業所",
+          "batch": "SFS0008",
+          "quantity": "470",
+          "price": "67",
+          "amount": "31490",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-26",
+          "destination": "株式会社織戶組 松田事業所",
+          "batch": "SFS0009",
+          "quantity": "1000",
+          "price": "65",
+          "amount": "65000",
+          "packing": "給液"
+        },
+        {
+          "day": "2026-08-27",
+          "destination": "株式会社ラミックス 厚木分配センター",
+          "batch": "SFS0009",
+          "quantity": "590",
+          "price": "70",
+          "amount": "41300",
+          "packing": "給液"
+        }
+      ],
+      "net": "570290",
+      "tax": "57029",
+      "gross": "627319",
+      "page": 13
+    }
+  ],
+  "extras": [
+    {
+      "bill": "石田電設",
+      "day": "2026-08-07",
+      "kind": "loan",
+      "product": "IBCタンク",
+      "destination": "(有)石田電設",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 6
+    },
+    {
+      "bill": "石田電設",
+      "day": "2026-08-07",
+      "kind": "loan",
+      "product": "2口キャップ",
+      "destination": "(有)石田電設",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 6
+    },
+    {
+      "bill": "石田電設",
+      "day": "2026-08-07",
+      "kind": "loan",
+      "product": "遮光カバー",
+      "destination": "(有)石田電設",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 6
+    },
+    {
+      "bill": "石田電設",
+      "day": "2026-08-07",
+      "kind": "loan",
+      "product": "蛇口タイプ",
+      "destination": "(有)石田電設",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 6
+    },
+    {
+      "bill": "石田電設",
+      "day": "2026-08-07",
+      "kind": "loan",
+      "product": "パレット",
+      "destination": "(有)石田電設",
+      "quantity": "5",
+      "price": "0",
+      "amount": "0",
+      "page": 6
+    },
+    {
+      "bill": "G.TRES",
+      "day": "2026-08-20",
+      "kind": "goods",
+      "product": "遮光カバー",
+      "destination": "(有)明鶴流通厚木車庫",
+      "quantity": "1",
+      "price": "4598",
+      "amount": "4598",
+      "page": 10
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-05",
+      "kind": "loan",
+      "product": "IBCタンク",
+      "destination": "株式会社秀栄 相模原車庫",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-05",
+      "kind": "loan",
+      "product": "自重落下ホース5m",
+      "destination": "株式会社秀栄 相模原車庫",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-05",
+      "kind": "loan",
+      "product": "遮光カバー",
+      "destination": "株式会社秀栄 相模原車庫",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-05",
+      "kind": "loan",
+      "product": "2口キャップ",
+      "destination": "株式会社秀栄 相模原車庫",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-19",
+      "kind": "loan",
+      "product": "IBCタンク",
+      "destination": "ニッポンロジ株式会社 神奈川流通センター",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-19",
+      "kind": "loan",
+      "product": "自重落下ホース3m",
+      "destination": "ニッポンロジ株式会社 神奈川流通センター",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-19",
+      "kind": "loan",
+      "product": "遮光カバー",
+      "destination": "ニッポンロジ株式会社 神奈川流通センター",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-19",
+      "kind": "loan",
+      "product": "2口キャップ",
+      "destination": "ニッポンロジ株式会社 神奈川流通センター",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-26",
+      "kind": "loan",
+      "product": "IBCタンク",
+      "destination": "株式会社織戶組 松田事業所",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-26",
+      "kind": "loan",
+      "product": "自重落下ホース3m",
+      "destination": "株式会社織戸組 松田事業所",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-26",
+      "kind": "loan",
+      "product": "遮光カバー",
+      "destination": "株式会社織戶組 松田事業所",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    },
+    {
+      "bill": "Schatz",
+      "day": "2026-08-26",
+      "kind": "loan",
+      "product": "2口キャップ",
+      "destination": "株式会社織戶組 松田事業所",
+      "quantity": "1",
+      "price": "0",
+      "amount": "0",
+      "page": 13
+    }
+  ],
+  "internal": [
+    {
+      "day": "2026-08-05",
+      "product": "仕入",
+      "category": "purchase",
+      "quantity": "0",
+      "amount": "0",
+      "page": 12
+    },
+    {
+      "day": "2026-08-09",
+      "product": "仕入",
+      "category": "purchase",
+      "quantity": "0",
+      "amount": "0",
+      "page": 12
+    },
+    {
+      "day": "2026-08-28",
+      "product": "仕入",
+      "category": "purchase",
+      "quantity": "0",
+      "amount": "0",
+      "page": 12
+    },
+    {
+      "day": "2026-08-29",
+      "product": "仕入",
+      "category": "purchase",
+      "quantity": "0",
+      "amount": "0",
+      "page": 12
+    }
+  ],
+  "source": {
+    "excel": "用田プラント給液履歴.xlsx",
+    "pdf": "2026年8月末締め_藤沢.pdf",
+    "sheet": "8月",
+    "reviewed_on": "2026-10-07"
+  }
+}

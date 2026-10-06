@@ -1,7 +1,9 @@
 import { currentPrice, type Data, type Order } from "./domain";
 import { validDate } from "./order-import";
 export const LOCAL_KEY = "fujisawa-adblue-demo-v1";
+import { validateBillingData, issuedCoverage } from "./billing";
 export type DeliverySite = {
+  billing_party_id?: string | null;
   id: string;
   customer_id: string;
   name: string;
@@ -27,6 +29,14 @@ export type LocalActual = {
   confirmed_at: string;
 };
 export type LocalSale = {
+  billing_party_id?: string | null;
+  transaction_category?: import("./billing").TransactionCategory;
+  invoice_on?: string;
+  invoice_quantity?: string;
+  invoice_unit?: string;
+  invoice_unit_price?: string;
+  liters_per_unit?: string;
+  billing_review_note?: string;
   id: string;
   order_id: string;
   actual_id: string;
@@ -35,7 +45,7 @@ export type LocalSale = {
   quantity_l: string;
   unit_price_excl_tax: string;
   net_amount: string;
-  billing_status: "unbilled" | "billed";
+  billing_status: "unbilled" | "billed" | "additional";
   billed_by: string | null;
   billed_at: string | null;
   billing_note: string;
@@ -137,6 +147,13 @@ export function confirmActual(
     order_id: orderId,
     actual_id: actual.id,
     customer_id: order.customer_id,
+    billing_party_id:
+      (data.sites || []).find((s) => s.id === order.site_id)
+        ?.billing_party_id ||
+      data.customers.find((c) => c.id === order.customer_id)
+        ?.billing_party_id ||
+      null,
+    transaction_category: "normal",
     delivered_on: input.delivered_on,
     quantity_l: input.quantity_l,
     unit_price_excl_tax: unitPrice,
@@ -174,6 +191,14 @@ export function markBilling(
     ids.some((id) => !(data.sales || []).some((s) => s.id === id))
   )
     throw new Error("対象売上を確認してください");
+  if (ids.some((id) => issuedCoverage(data, id).length))
+    throw new Error(
+      "発行済み請求書の明細は、この画面で請求状態を変更できません",
+    );
+  if (ids.some((id) => data.sales?.find((s) => s.id === id)?.billing_party_id))
+    throw new Error(
+      "請求先を設定した売上は「請求前チェック・請求書」で請求確定してください",
+    );
   const now = new Date().toISOString();
   return {
     ...data,
@@ -194,7 +219,7 @@ export function localData(raw: unknown): Data {
   if (!raw || typeof raw !== "object" || Array.isArray(raw))
     throw new Error("保存データの形式が不正です");
   const v = raw as Data;
-  if ((v.schema_version ?? 1) > 3)
+  if ((v.schema_version ?? 1) > 4)
     throw new Error("このアプリより新しい形式です。アプリを更新してください");
   for (const key of [
     "customers",
@@ -206,13 +231,17 @@ export function localData(raw: unknown): Data {
     if (!Array.isArray(v[key])) throw new Error(`${key}の保存データが不正です`);
   const result: Data = {
     ...v,
-    schema_version: 3,
+    schema_version: 4,
     local_revision: v.local_revision ?? 0,
     sites: v.sites ?? [],
     actuals: v.actuals ?? [],
     sales: v.sales ?? [],
     orderImages: v.orderImages ?? [],
     invoiceDrafts: v.invoiceDrafts ?? [],
+    billingParties: v.billingParties ?? [],
+    billingItems: v.billingItems ?? [],
+    billingInvoices: v.billingInvoices ?? [],
+    taxRules: v.taxRules ?? [],
   };
   for (const key of [
     "customers",
@@ -418,7 +447,7 @@ export function localData(raw: unknown): Data {
       a.unit_price_excl_tax !== s.unit_price_excl_tax ||
       a.net_amount !== s.net_amount ||
       a.delivered_on !== s.delivered_on ||
-      !["unbilled", "billed"].includes(s.billing_status)
+      !["unbilled", "billed", "additional"].includes(s.billing_status)
     )
       throw new Error("売上の関連・金額が不正です");
   }
@@ -479,13 +508,14 @@ export function localData(raw: unknown): Data {
         if (d.reference[key]) sumDecimal([d.reference[key]]);
     }
   }
+  validateBillingData(result);
   return result;
 }
 export function backupText(data: Data) {
   return JSON.stringify(
     {
       format: "fujisawa-adblue-local",
-      version: 3,
+      version: 4,
       exported_at: new Date().toISOString(),
       data,
     },
@@ -497,7 +527,7 @@ export function parseBackup(text: string): Data {
   const parsed = JSON.parse(text);
   if (
     parsed?.format !== "fujisawa-adblue-local" ||
-    ![2, 3].includes(parsed.version)
+    ![2, 3, 4].includes(parsed.version)
   )
     throw new Error("藤沢AdBlueのJSONバックアップを選択してください");
   return localData(parsed.data);

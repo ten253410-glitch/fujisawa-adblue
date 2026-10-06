@@ -13,7 +13,7 @@ import {
   type ReviewRow,
   type DraftInvoice,
 } from "@/lib/history-import";
-import { readHistoryFile } from "@/lib/history-file";
+import { readHistoryFile, type HistorySheet } from "@/lib/history-file";
 import { formatDecimal, sumDecimal, multiplyNet } from "@/lib/local-flow";
 import { download, type LocalCommit } from "./local-business";
 type Key = keyof typeof columns;
@@ -45,9 +45,7 @@ export function HistoryImport({
   actor: string;
   commit: LocalCommit;
 }) {
-  const [sheets, setSheets] = useState<{ name: string; table: string[][] }[]>(
-      [],
-    ),
+  const [sheets, setSheets] = useState<HistorySheet[]>([]),
     [sheet, setSheet] = useState(0),
     [header, setHeader] = useState(0),
     [fileName, setFileName] = useState(""),
@@ -149,12 +147,69 @@ export function HistoryImport({
       ] as Key[])
         if (mapping[key] === undefined || mapping[key] < 0)
           throw new Error(`${columns[key]}の列を選んでください`);
-      setRows(mappedRows(sheets[sheet].table, header, mapping));
+      const mapped = mappedRows(sheets[sheet].table, header, mapping).map(
+        (r) => ({
+          ...r,
+          row: sheets[sheet].rowNumbers?.[r.row - 1] || r.row,
+          original: r.original
+            ? {
+                ...r.original,
+                row: sheets[sheet].rowNumbers?.[r.row - 1] || r.row,
+              }
+            : undefined,
+        }),
+      );
+      if (!mapped.length) throw new Error("取込対象の行がありません");
+      setRows(mapped);
       setError("");
       setConfirmed(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "列を確認してください");
     }
+  }
+  function plantPreview() {
+    const s = sheets[sheet];
+    const mapping = {
+      day: 0,
+      customer: 1,
+      site: 1,
+      address: -1,
+      quantity: 3,
+      price: 6,
+      amount: 9,
+      operator: -1,
+      slip: -1,
+      notes: 8,
+    };
+    const reviewed = mappedRows(s.table, -1, mapping)
+      .map((r) => ({
+        ...r,
+        row: s.rowNumbers?.[r.row - 1] || r.row,
+        original: r.original
+          ? { ...r.original, row: s.rowNumbers?.[r.row - 1] || r.row }
+          : undefined,
+        operator: "資料未記載",
+        notes: [
+          r.notes,
+          s.table[r.row - 1]?.[2] && "社内グループ " + s.table[r.row - 1][2],
+          s.table[r.row - 1]?.[7] && "バッチ " + s.table[r.row - 1][7],
+        ]
+          .filter(Boolean)
+          .join(" / "),
+      }))
+      .filter(
+        (r) =>
+          /^\d{4}-\d{2}-\d{2}$/.test(r.day) &&
+          !!r.customer &&
+          !!r.quantity &&
+          !!r.price,
+      );
+    setRows(reviewed);
+    setConfirmed(false);
+    setError("");
+    setMessage(
+      "用田形式で給液行だけを抽出しました。製造・仕入・貸与行は給液として取り込んでいません。請求先は別途確認してください。",
+    );
   }
   async function save() {
     if (!confirmed || !taxBasis) return;
@@ -237,7 +292,7 @@ export function HistoryImport({
           />
         </label>
         <p className="hint">
-          CSV／xlsx、10MB、2000明細まで。xlsxの数式は実行せず、値に変換した資料を使用します。マクロ・xlsは未対応です。
+          CSV／xlsx、10MB、2000明細まで。xlsxの数式は実行せず、保存済み計算結果を確認用に読み込みます。マクロ・xlsは未対応です。
         </p>
         <button
           className="secondary"
@@ -254,6 +309,21 @@ export function HistoryImport({
         {!!sheets.length && (
           <>
             <p>{fileName}</p>
+            {!!sheets[sheet].formulaCells?.length && (
+              <p className="hint">
+                数式は実行せず、保存済み計算結果を表示しています（
+                {sheets[sheet].formulaCells?.length}
+                セル）。数量×単価を独立に再計算して確認します。
+              </p>
+            )}
+            {sheets[sheet].warnings?.map((w, i) => (
+              <p className="alert error" key={i}>
+                {w}
+              </p>
+            ))}
+            <button className="secondary" type="button" onClick={plantPreview}>
+              用田プラント形式で給液行をプレビュー
+            </button>
             <label>
               取込シート
               <select
@@ -672,7 +742,7 @@ export function InvoiceWorkspace({
       <div className="no-print">
         <h1>月次検証請求書・照合</h1>
         <p>
-          顧客ごとに対象月の全給液明細をまとめます。請求済みの実績も検証対象です。税・締め処理が未確定のため正式発行はしません。
+          旧検証画面です。顧客ごとの数量・税抜金額を確認します。請求先別の集約・税計算・追加請求・請求確定は「請求前チェック・請求書」を使用してください。
         </p>
         {error && (
           <div className="alert error" role="alert">

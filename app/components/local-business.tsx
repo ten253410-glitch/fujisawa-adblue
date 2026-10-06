@@ -70,6 +70,7 @@ export function SiteManager({
       const site: DeliverySite = {
         id: editing?.id ?? crypto.randomUUID(),
         customer_id: customerId,
+        billing_party_id: String(f.get("site_payer") || "") || null,
         name,
         address: String(f.get("site_address")).trim(),
         contact: String(f.get("site_contact")).trim(),
@@ -148,6 +149,21 @@ export function SiteManager({
           </Entry>
           <Entry label="給液場所住所">
             <input name="site_address" defaultValue={editing?.address} />
+          </Entry>
+          <Entry label="場所の請求先">
+            <select
+              name="site_payer"
+              defaultValue={editing?.billing_party_id || ""}
+            >
+              <option value="">給液先企業の設定を使用</option>
+              {(data.billingParties || [])
+                .filter((p) => p.active)
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.internal_name} / {p.formal_name}
+                  </option>
+                ))}
+            </select>
           </Entry>
           <Entry label="場所の連絡先">
             <input name="site_contact" defaultValue={editing?.contact} />

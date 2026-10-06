@@ -161,7 +161,7 @@ test("monthly drafts group all deliveries, freeze lines, leave tax null and surv
   data.invoiceDrafts![0].net = "1";
   assert.throws(() => parseBackup(backupText(data)), /金額/);
 });
-test("xlsx selects sheets, reads dates and rejects formulas without evaluating them", async () => {
+test("xlsx selects sheets, reads dates and cached formulas without evaluating them", async () => {
   const book = new Workbook(),
     sheet = book.addWorksheet("八月");
   sheet.addRow(table[0]);
@@ -185,8 +185,33 @@ test("xlsx selects sheets, reads dates and rejects formulas without evaluating t
   assert.equal(result[0].table[1][8], "0001");
   sheet.getCell("G2").value = { formula: "E2*F2", result: 10000 };
   const formula = await book.xlsx.writeBuffer();
-  await assert.rejects(
-    () => readHistoryFile(new File([new Uint8Array(formula)], "formula.xlsx")),
-    /数式/,
+  const cached = await readHistoryFile(
+    new File([new Uint8Array(formula)], "formula.xlsx"),
   );
+  assert.equal(cached[0].table[1][6], "10000");
+  assert.deepEqual(cached[0].formulaCells, ["G2"]);
+});
+test("xlsx ignores long formatting-only tails while preserving physical source row numbers", async () => {
+  const { zipSync, strToU8 } = await import("fflate");
+  const book = new Workbook();
+  const sheet = book.addWorksheet("8月");
+  sheet.addRow(["給液日"]);
+  sheet.getCell("A5").value = "2026-08-01";
+  const { unzipSync, strFromU8 } = await import("fflate");
+  const entries = unzipSync(new Uint8Array(await book.xlsx.writeBuffer()));
+  const path = "xl/worksheets/sheet1.xml";
+  entries[path] = strToU8(
+    strFromU8(entries[path]).replace(
+      "</sheetData>",
+      Array.from(
+        { length: 10000 },
+        (_, i) => `<row r="${i + 100}" customHeight="1"/>`,
+      ).join("") + "</sheetData>",
+    ),
+  );
+  const result = await readHistoryFile(
+    new File([new Uint8Array(zipSync(entries))], "formatted.xlsx"),
+  );
+  assert.deepEqual(result[0].rowNumbers, [1, 5]);
+  assert.equal(result[0].table[1][0], "2026-08-01");
 });
