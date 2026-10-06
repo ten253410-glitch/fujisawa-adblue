@@ -23,12 +23,15 @@ export type Order = {
   id: string;
   case_no: string;
   customer_id: string;
-  channel: "line" | "phone";
+  channel: "line" | "phone" | "fax" | "paper" | "image";
   received_at: string;
   requested_quantity: number | null;
   quantity_unit: string;
   source_text: string;
   location: string;
+  address?: string;
+  contact?: string;
+  requested_on?: string | null;
   notes: string;
   scheduled_on: string | null;
   status: "new" | "scheduled" | "document_pending" | "completed" | "cancelled";
@@ -58,6 +61,7 @@ export type Data = {
   orders: Order[];
   documents: Document[];
   audit: Audit[];
+  orderImages?: import("./order-import").SourceImage[];
 };
 export const emptyData = (): Data => ({
   customers: [],

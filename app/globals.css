@@ -1158,3 +1158,144 @@ textarea::placeholder {
     color: var(--blue);
   }
 }
+.image-review-grid {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.8fr) minmax(360px, 1.2fr);
+  gap: 24px;
+  align-items: start;
+}
+.original-panel {
+  position: sticky;
+  top: 20px;
+}
+.order-original {
+  display: block;
+  width: 100%;
+  max-height: 750px;
+  object-fit: contain;
+  background: #f2f5f7;
+  border: 1px solid var(--border);
+}
+.image-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 25px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.image-steps .enabled {
+  color: var(--blue);
+  font-weight: 600;
+}
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  margin: 18px 0;
+  line-height: 1.8;
+}
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 3px 0;
+  flex-shrink: 0;
+}
+.confirmation {
+  padding: 15px;
+  background: #eaf4f8;
+  border-radius: 6px;
+}
+.spaced {
+  margin: 12px 0 12px 10px;
+}
+.read-warnings {
+  background: #fff7e6;
+  color: #94733c;
+  font-size: 12px;
+  padding: 12px 12px 12px 28px;
+  border-radius: 7px;
+  overflow-wrap: anywhere;
+}
+.candidate-panel {
+  padding: 16px;
+  background: #f6f9fb;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+.candidate-panel h3 {
+  margin-top: 0;
+}
+.candidate {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  padding: 10px;
+  margin: 8px 0;
+}
+.candidate.selected {
+  border-color: var(--blue);
+  background: #edf7fb;
+}
+.candidate small {
+  color: var(--muted);
+}
+.method-badge {
+  font-size: 11px;
+  color: var(--blue);
+  background: #edf5f8;
+  padding: 8px;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.master-comparison {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.master-comparison .details {
+  font-size: 12px;
+  grid-template-columns: 100px 1fr;
+}
+.master-comparison dd small {
+  display: block;
+}
+.import-record {
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  margin-bottom: 15px;
+}
+.import-record summary {
+  cursor: pointer;
+  color: var(--blue);
+  overflow-wrap: anywhere;
+  margin-bottom: 12px;
+}
+.quick-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 760px) {
+  .image-review-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .original-panel {
+    position: static;
+  }
+  .order-original {
+    max-height: 320px;
+  }
+  .image-steps {
+    gap: 12px;
+    font-size: 11px;
+  }
+  .spaced {
+    margin-left: 0;
+    width: 100%;
+  }
+}

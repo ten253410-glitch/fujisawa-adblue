@@ -1,6 +1,6 @@
 # Fujisawa AdBlue Management
 
-藤沢営業所専用のAdBlue受注・給液管理Webアプリ（Phase 1）。Next.js App Router / TypeScript / Supabase PostgreSQL・Auth・Storage。Vercelに配置可能です。
+藤沢営業所専用のAdBlue受注・給液管理Webアプリ（Phase 1＋受注画像取込）。Next.js App Router / TypeScript / Supabase PostgreSQL・Auth・Storage。Vercelに配置可能です。
 
 ## 起動・デモ
 
@@ -23,7 +23,7 @@ npm run dev
 - スマートフォン撮影／PC画像選択、案件への納品書登録と画像確認
 - 管理者別の変更履歴
 
-依頼数量と確定給液量は別です。AI/OCR・給液実績確定・売上確定・未請求件数の算出・請求書作成は後続Phase。未請求はダッシュボードで「— / Phase 3」と明示しています。
+依頼数量と確定給液量は別です。FAX・紙・LINEの受注画像取込と、確認後の登録を追加しました。納品書のAI/OCR・給液実績確定・売上確定・未請求件数の算出・請求書作成は後続Phase。未請求はダッシュボードで「— / Phase 3」と明示しています。
 
 ## 本番Supabase設定
 
@@ -53,7 +53,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_PUBLIC_ANON_OR_PUBLISHABLE_KEY
 
 GitHubリポジトリをVercelへImportし、FrameworkをNext.jsに設定。上記2つの環境変数をPreview/Productionに設定してDeployしてください。Supabase AuthのSite URL／許可するRedirect URLを実際のVercelドメインに設定します。本実装はパスワードログインで、パスワード再発行UI・招待リンクUIは未実装です。公開デプロイ・外部サービス作成はこの変更では実施していません。
 
-将来のOpenAI API呼び出しはサーバー側のみで実行し、キーを `NEXT_PUBLIC_` に置かないでください。Phase 1でAPIキーは不要です。
+受注画像のAI読み取りにOpenAI Responses APIを使います（サーバー側のみ）。`ADBLUE_OPENAI_API_KEY` と `OPENAI_OCR_MODEL` が必要です。キーを `NEXT_PUBLIC_` に置かないでください。未設定なら手入力／明示した操作サンプルが利用できます。既存DBには002の追加移行が必要です。詳細は [受注画像取込の設定手順](docs/ORDER_IMAGE_IMPORT.md) を参照してください。
 
 ## 検証
 

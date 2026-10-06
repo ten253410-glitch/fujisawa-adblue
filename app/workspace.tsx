@@ -28,6 +28,10 @@ import {
   X,
   RefreshCw,
 } from "lucide-react";
+import OrderImageImport, {
+  type ImportConfirmation,
+} from "./components/order-image-import";
+import { importedOrder, type SourceImage } from "@/lib/order-import";
 import { supabase } from "@/lib/supabase";
 import { loadRemote, writeRemote } from "@/lib/repository";
 import {
@@ -52,6 +56,7 @@ type View =
   | "home"
   | "customers"
   | "order"
+  | "image-import"
   | "schedule"
   | "documents"
   | "detail"
@@ -379,6 +384,106 @@ export default function Workspace() {
       setNotice("受注を登録しました");
     });
   }
+  async function confirmImageOrder(input: ImportConfirmation) {
+    const order = importedOrder(
+      input.reviewed,
+      input.customerId,
+      input.channel,
+      input.scheduledOn,
+    );
+    const imageId = crypto.randomUUID();
+    if (mode === "live") {
+      const { data: auth } = await supabase!.auth.getUser();
+      if (!auth.user) throw new Error("再ログインしてください");
+      const extension = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+      }[input.file.type];
+      const path = `${auth.user.id}/${imageId}.${extension}`;
+      const { error: uploadError } = await supabase!.storage
+        .from("order-images")
+        .upload(path, input.file, {
+          contentType: input.file.type,
+          upsert: false,
+        });
+      if (uploadError)
+        throw new Error(
+          "受注画像を保存できません。画像取込用SQL（002）とStorage設定を確認してください。",
+        );
+      const { error: registerError } = await supabase!.rpc(
+        "register_image_order",
+        {
+          p_order: order,
+          p_image_id: imageId,
+          p_path: path,
+          p_filename: input.file.name,
+          p_extracted: input.result,
+          p_reviewed: input.reviewed,
+          p_confirmed: true,
+          p_new_customer: input.newCustomer,
+        },
+      );
+      if (registerError) {
+        await supabase!.storage.from("order-images").remove([path]);
+        throw new Error(
+          "受注登録に失敗しました。入力内容・顧客・画像取込用SQL（002）を確認してください。重複登録を避けるため最新データも確認してください。",
+        );
+      }
+      setData(await loadRemote());
+    } else {
+      const source: SourceImage = {
+        id: imageId,
+        order_id: order.id,
+        path: input.preview,
+        filename: input.file.name,
+        extracted: input.result,
+        reviewed: input.reviewed,
+        reviewed_by: actor,
+        reviewed_at: new Date().toISOString(),
+      };
+      const next = {
+        ...data,
+        customers: input.newCustomer
+          ? [...data.customers, input.newCustomer]
+          : data.customers,
+        orders: [...data.orders, order],
+        orderImages: [...(data.orderImages || []), source],
+      };
+      saveDemo(
+        next,
+        "image_order",
+        order.id,
+        "INSERT",
+        JSON.stringify({
+          order,
+          extracted: input.result,
+          reviewed: input.reviewed,
+          new_customer: input.newCustomer,
+          image_filename: input.file.name,
+        }),
+      );
+    }
+    setSelected(order.id);
+    setView("detail");
+    setNotice(
+      "画像の確認内容で受注を登録しました。希望日は確定予定日とは別に保存しました。",
+    );
+  }
+  async function viewSourceImage(source: SourceImage) {
+    await run(async () => {
+      let url = source.path;
+      if (mode === "live") {
+        const { data: signed, error } = await supabase!.storage
+          .from("order-images")
+          .createSignedUrl(source.path, 60);
+        if (error) throw error;
+        url = signed.signedUrl;
+      }
+      setImageAlt("受注原画像");
+      setImage(url);
+    });
+  }
   async function updateSchedule(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -489,10 +594,12 @@ export default function Workspace() {
         if (error) throw error;
         url = signed.signedUrl;
       }
+      setImageAlt("納品書");
       setImage(url);
     });
   }
   const [image, setImage] = useState("");
+  const [imageAlt, setImageAlt] = useState("納品書");
   const orderCards = (orders: Order[]) =>
     orders.length ? (
       <div className="order-list">
@@ -728,6 +835,7 @@ export default function Workspace() {
             <button onClick={() => nav("home")}>ホーム</button>
             <button onClick={() => nav("schedule")}>給液スケジュール</button>
             <button onClick={() => nav("customers")}>顧客マスター</button>
+            <button onClick={() => nav("image-import")}>受注画像取込</button>
             <button onClick={() => nav("documents")}>納品書</button>
             <button onClick={() => nav("audit")}>変更履歴</button>
           </nav>
@@ -844,6 +952,12 @@ export default function Workspace() {
                       Icon: MessageSquare,
                       click: () => beginOrder("line"),
                       green: true,
+                    },
+                    {
+                      name: "受注画像取込",
+                      sub: "FAX・紙・LINE画像を確認",
+                      Icon: Camera,
+                      click: () => nav("image-import"),
                     },
                     {
                       name: "電話受注",
@@ -1151,6 +1265,13 @@ export default function Workspace() {
               </div>
             </>
           )}
+          {view === "image-import" && (
+            <OrderImageImport
+              data={data}
+              mode={mode}
+              onConfirm={confirmImageOrder}
+            />
+          )}
           {view === "order" && (
             <>
               <div className="page-heading">
@@ -1347,7 +1468,17 @@ export default function Workspace() {
                     <dt>受注日</dt>
                     <dd>{fmt(currentOrder.received_at)}</dd>
                     <dt>受付</dt>
-                    <dd>{currentOrder.channel === "line" ? "LINE" : "電話"}</dd>
+                    <dd>
+                      {
+                        {
+                          line: "LINE",
+                          phone: "電話",
+                          fax: "FAX",
+                          paper: "紙の受注書",
+                          image: "その他画像",
+                        }[currentOrder.channel]
+                      }
+                    </dd>
                     <dt>依頼数量</dt>
                     <dd>
                       {currentOrder.requested_quantity === null
@@ -1370,6 +1501,51 @@ export default function Workspace() {
                       </small>
                     </dd>
                   </dl>
+                  {(currentOrder.address ||
+                    currentOrder.contact ||
+                    currentOrder.requested_on) && (
+                    <dl className="details">
+                      <dt>希望給液日</dt>
+                      <dd>
+                        {fmt(currentOrder.requested_on || "")}（予定は別途調整）
+                      </dd>
+                      <dt>住所</dt>
+                      <dd>{currentOrder.address || "—"}</dd>
+                      <dt>連絡先</dt>
+                      <dd>{currentOrder.contact || "—"}</dd>
+                    </dl>
+                  )}
+                  {(data.orderImages || [])
+                    .filter((i) => i.order_id === currentOrder.id)
+                    .map((source) => (
+                      <details className="import-record" key={source.id}>
+                        <summary>
+                          受注原画像と確認記録：{source.filename}
+                        </summary>
+                        <button
+                          className="secondary"
+                          onClick={() => viewSourceImage(source)}
+                        >
+                          受注原画像を表示
+                        </button>
+                        <p className="hint">
+                          確認日時：{timestamp(source.reviewed_at)} ·{" "}
+                          {source.extracted.method === "openai"
+                            ? "AI候補"
+                            : source.extracted.method === "sample"
+                              ? "サンプル候補（画像未解析）"
+                              : "手入力"}
+                        </p>
+                        <h3>読取候補（登録前）</h3>
+                        <pre className="source-text">
+                          {JSON.stringify(source.extracted.fields, null, 2)}
+                        </pre>
+                        <h3>確認・修正後</h3>
+                        <pre className="source-text">
+                          {JSON.stringify(source.reviewed, null, 2)}
+                        </pre>
+                      </details>
+                    ))}
                   {currentOrder.source_text && (
                     <>
                       <h3>LINE原文</h3>
@@ -1694,14 +1870,14 @@ export default function Workspace() {
           className="modal"
           role="dialog"
           aria-modal="true"
-          aria-label="納品書画像"
+          aria-label={`${imageAlt}画像`}
         >
           <button className="secondary" onClick={() => setImage("")}>
             <X size={20} />
             閉じる
           </button>
           {/* Uploaded images are private documents, not public optimized assets. */}
-          <img src={image} alt="納品書" />
+          <img src={image} alt={imageAlt} />
         </div>
       )}
     </div>

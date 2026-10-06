@@ -41,6 +41,20 @@ export async function loadRemote(): Promise<Data> {
     created_at: a.created_at,
     detail: JSON.stringify(a.changes),
   }));
+  d.orderImages = [];
+  for (let offset = 0; ; offset += 500) {
+    const images = await client
+      .from("order_source_images")
+      .select("*")
+      .order("id")
+      .range(offset, offset + 499);
+    if (images.error) {
+      if (["42P01", "PGRST205"].includes(images.error.code)) break;
+      throw images.error;
+    }
+    d.orderImages.push(...images.data);
+    if (images.data.length < 500) break;
+  }
   return d;
 }
 export async function writeRemote(

@@ -15,6 +15,7 @@ test("migration, admin RLS, audit, private document registration and immutable d
  grant select,insert,delete on storage.objects to authenticated;
  create function storage.foldername(text) returns text[] language sql as $$select string_to_array($1,'/')$$;`);
     await db.exec(readFileSync("supabase/001_initial.sql", "utf8"));
+    await db.exec(readFileSync("supabase/002_order_images.sql", "utf8"));
     const tsuchiya = "00000000-0000-0000-0000-000000000001",
       sato = "00000000-0000-0000-0000-000000000002",
       outsider = "00000000-0000-0000-0000-000000000003";
@@ -88,6 +89,80 @@ test("migration, admin RLS, audit, private document registration and immutable d
       ).rows[0].actor_name,
       "佐藤",
     );
+    await db.exec(`set request.jwt.claim.sub='${tsuchiya}';`);
+    const imageId = "40000000-0000-0000-0000-000000000001",
+      importedId = "50000000-0000-0000-0000-000000000001";
+    const imagePath = `${tsuchiya}/${imageId}.jpg`;
+    await db.exec(
+      `insert into storage.objects(bucket_id,name) values('order-images','${imagePath}');`,
+    );
+    const imageOrder = {
+      id: importedId,
+      case_no: "IMAGE-1",
+      customer_id: customer,
+      channel: "fax",
+      received_at: "2026-10-06",
+      requested_quantity: 250,
+      location: "現場",
+      address: "藤沢市",
+      contact: "担当 0466-00-0001",
+      requested_on: "2026-10-08",
+      scheduled_on: null,
+      notes: "確認済み",
+    };
+    await assert.rejects(
+      db.query(
+        `select public.register_image_order($1,$2,$3,'fax.jpg','{}','{}',false,null)`,
+        [JSON.stringify(imageOrder), imageId, imagePath],
+      ),
+    );
+    assert.equal(
+      (
+        await db.query(
+          `select status,scheduled_on,requested_on::text,requested_quantity from public.orders where id='${importedId}'`,
+        )
+      ).rows.length,
+      0,
+    );
+    await db.query(
+      `select public.register_image_order($1,$2,$3,'fax.jpg',$4,$5,true,null)`,
+      [
+        JSON.stringify(imageOrder),
+        imageId,
+        imagePath,
+        JSON.stringify({ fields: { quantity_l: 200 }, method: "openai" }),
+        JSON.stringify({ quantity_l: 250 }),
+      ],
+    );
+    const imported = (
+      await db.query<{
+        status: string;
+        scheduled_on: null;
+        requested_on: string;
+        requested_quantity: string;
+      }>(
+        `select status,scheduled_on,requested_on::text,requested_quantity from public.orders where id='${importedId}'`,
+      )
+    ).rows[0];
+    assert.equal(imported.status, "new");
+    assert.equal(imported.scheduled_on, null);
+    assert.equal(imported.requested_on, "2026-10-08");
+    assert.equal(Number(imported.requested_quantity), 250);
+    assert.equal(
+      (
+        await db.query<{ reviewed_by: string }>(
+          `select reviewed_by from public.order_source_images`,
+        )
+      ).rows[0].reviewed_by,
+      tsuchiya,
+    );
+    await assert.rejects(
+      db.exec(`update public.order_source_images set filename='fake'`),
+    );
+    await db.exec(
+      `select public.consume_order_ocr_quota();select public.consume_order_ocr_quota();select public.consume_order_ocr_quota();select public.consume_order_ocr_quota();select public.consume_order_ocr_quota();`,
+    );
+    await assert.rejects(db.exec(`select public.consume_order_ocr_quota()`));
     await db.exec(`set request.jwt.claim.sub='${outsider}';`);
     assert.equal(
       (await db.query(`select * from public.customers`)).rows.length,
@@ -97,6 +172,11 @@ test("migration, admin RLS, audit, private document registration and immutable d
       (await db.query(`select * from storage.objects`)).rows.length,
       0,
     );
+    assert.equal(
+      (await db.query(`select * from public.order_source_images`)).rows.length,
+      0,
+    );
+    await assert.rejects(db.exec(`select public.consume_order_ocr_quota()`));
     await assert.rejects(
       db.exec(`insert into public.customers(name) values('不正')`),
     );
