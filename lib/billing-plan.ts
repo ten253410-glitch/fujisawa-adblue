@@ -153,7 +153,9 @@ function eligible(
           x.destination === l.destination &&
           x.quantity === l.quantity &&
           x.price === l.price &&
-          x.kind === l.kind,
+          x.kind === l.kind &&
+          x.product === l.product &&
+          x.unit === l.unit,
       ) &&
       !review
     )
@@ -339,4 +341,20 @@ export function consolidateDestinations(
         : i,
     ),
   };
+}
+
+/** Original invoice month takes precedence; otherwise use the payer's closing period. */
+export function sourceBillingMonth(data: Data, line: BillingLine) {
+  const original = data.billingInvoices?.find(
+    (i) =>
+      i.kind === "reference" &&
+      i.lines.some((l) => l.source_id === line.source_id),
+  );
+  if (original) return original.month;
+  const month = line.actual_day.slice(0, 7),
+    party = data.billingParties?.find((p) => p.id === lineParty(data, line));
+  if (!party || line.actual_day <= billingPeriod(month, party).end)
+    return month;
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 7);
 }

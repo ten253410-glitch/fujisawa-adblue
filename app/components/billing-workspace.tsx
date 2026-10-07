@@ -2,6 +2,7 @@
 import { unpaidLines } from "@/lib/billing-plan";
 import { billingPeriod } from "@/lib/billing-accounts";
 import BillingPlanWorkspace from "./billing-plan-workspace";
+import InvoiceWizard from "./invoice-wizard";
 import { AccountFields, readAccountFields } from "./account-directory";
 import {
   billingDates,
@@ -46,11 +47,14 @@ export default function BillingWorkspace({
   actor: string;
   commit: LocalCommit;
 }) {
+  const [section, setSection] = useState<
+    "create" | "unpaid" | "integration" | "monthly" | "accounts"
+  >("create");
   const [invoiceApprovals, setInvoiceApprovals] = useState<
     Record<string, boolean>
   >({});
   const [tab, setTab] = useState<
-      "check" | "masters" | "august" | "items" | "settings" | "plan"
+      "check" | "masters" | "august" | "items" | "settings" | "legacy"
     >("check"),
     [month, setMonth] = useState("2026-08"),
     [party, setParty] = useState(""),
@@ -303,54 +307,109 @@ export default function BillingWorkspace({
             {notice}
           </div>
         )}
-        <div className="tabs wrap">
-          {[
-            ["check", "請求前チェック"],
-            ["plan", "未請求・統合請求"],
-            ["masters", "請求先・紐付け"],
-            ["august", "実資料8月検証"],
-            ["items", "商品・貸与・対象外"],
-            ["settings", "税・請求書設定"],
-          ].map(([v, n]) => (
+        <nav aria-label="請求業務の入口" className="billing-menu">
+          {(
+            [
+              ["create", "① 請求書を作る"],
+              ["unpaid", "② 未請求を処理"],
+              ["integration", "③ 統合請求設定"],
+              ["monthly", "④ 月次集計・照合"],
+              ["accounts", "⑤ 請求先設定"],
+            ] as const
+          ).map(([value, label]) => (
             <button
-              key={v}
+              key={value}
+              aria-pressed={section === value}
               onClick={() => {
-                setTab(v as typeof tab);
+                setSection(value);
+                setTab(value === "monthly" ? "check" : "masters");
                 setError("");
                 setNotice("");
+                setApproved(false);
               }}
             >
-              {n}
+              {label}
             </button>
           ))}
-        </div>
-        <label className="field">
-          対象月
-          <input
-            aria-label="請求チェック対象月"
-            type="month"
-            value={month}
-            onChange={(e) => {
-              setMonth(e.target.value);
-              setSelected([]);
-              setApproved(false);
-              setIssueDay("");
-              setDueDay("");
-              setSubject(e.target.value + "分");
-            }}
-          />
-        </label>
+        </nav>
+        {(section === "monthly" || section === "accounts") && (
+          <nav
+            aria-label={
+              section === "monthly" ? "月次確認の機能" : "請求設定の機能"
+            }
+            className="tabs wrap"
+          >
+            {(section === "monthly"
+              ? [
+                  ["check", "請求前チェック"],
+                  ["august", "実資料8月検証"],
+                  ["items", "商品・貸与・対象外"],
+                  ["legacy", "既存請求の管理"],
+                ]
+              : [
+                  ["masters", "請求先・紐付け"],
+                  ["settings", "税・請求書設定"],
+                ]
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                aria-pressed={tab === value}
+                onClick={() => {
+                  setTab(value as typeof tab);
+                  setError("");
+                  setNotice("");
+                  setApproved(false);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        )}
+        {section !== "integration" && (
+          <label className="field">
+            {section === "unpaid" ? "追加する請求対象月" : "対象月"}
+            <input
+              aria-label="請求チェック対象月"
+              type="month"
+              value={month}
+              onChange={(e) => {
+                setMonth(e.target.value);
+                setSelected([]);
+                setApproved(false);
+                setIssueDay("");
+                setDueDay("");
+                setSubject(e.target.value + "分");
+              }}
+            />
+          </label>
+        )}
       </div>
-      {tab === "plan" && (
-        <BillingPlanWorkspace
+      {section === "create" && (
+        <InvoiceWizard
           key={month}
+          data={data}
+          actor={actor}
+          commit={commit}
+          month={month}
+          onUnpaid={() => setSection("unpaid")}
+          onSettings={() => {
+            setSection("accounts");
+            setTab("settings");
+          }}
+        />
+      )}
+      {(section === "unpaid" || section === "integration") && (
+        <BillingPlanWorkspace
+          key={section}
+          view={section === "integration" ? "integration" : "unpaid"}
           data={data}
           actor={actor}
           commit={commit}
           month={month}
         />
       )}
-      {tab === "masters" && (
+      {section === "accounts" && tab === "masters" && (
         <section className="panel no-print">
           <h2>請求先マスター</h2>
           <form onSubmit={payer}>
@@ -496,7 +555,7 @@ export default function BillingWorkspace({
           </form>
         </section>
       )}
-      {tab === "august" && (
+      {section === "monthly" && tab === "august" && (
         <section className="panel no-print">
           <h2>受領した8月実資料の照合結果</h2>
           <p>
@@ -635,7 +694,7 @@ export default function BillingWorkspace({
           </p>
         </section>
       )}
-      {tab === "items" && (
+      {section === "monthly" && tab === "items" && (
         <section className="panel no-print">
           <h2>商品・無償貸与・BIB・対象外の記録</h2>
           <form onSubmit={item}>
@@ -751,7 +810,7 @@ export default function BillingWorkspace({
             ))}
         </section>
       )}
-      {tab === "items" && (
+      {section === "monthly" && tab === "items" && (
         <section className="panel no-print">
           <h2>内部取引・仕入・対象外の区分確認</h2>
           <p>
@@ -798,7 +857,7 @@ export default function BillingWorkspace({
             ))}
         </section>
       )}
-      {tab === "settings" && (
+      {section === "accounts" && tab === "settings" && (
         <section className="panel no-print">
           <h2>{month}の税・請求書設定</h2>
           <p>
@@ -856,7 +915,7 @@ export default function BillingWorkspace({
           </form>
         </section>
       )}
-      {tab === "check" && (
+      {section === "monthly" && tab === "check" && (
         <>
           {unpaidLines(data).some((l) => {
             const p = data.billingParties?.find(
@@ -871,10 +930,10 @@ export default function BillingWorkspace({
             <section className="panel no-print alert">
               <strong>過去の未請求実績があります</strong>
               <p>
-                「未請求・統合請求」で明細を確認し、今回請求するものだけを選択してください。
+                「未請求を処理」で明細を確認し、今回請求するものだけを選択してください。
               </p>
-              <button onClick={() => setTab("plan")}>
-                未請求・統合請求を開く
+              <button onClick={() => setSection("unpaid")}>
+                未請求を処理へ
               </button>
             </section>
           )}
@@ -1090,124 +1149,162 @@ export default function BillingWorkspace({
               ))}
             </details>
           </section>
+          <button
+            className="no-print secondary"
+            onClick={() => setTab("legacy")}
+          >
+            既存請求書を確認・印刷する
+          </button>
+        </>
+      )}
+      {section === "monthly" && tab === "legacy" && (
+        <>
           <section className="panel no-print">
-            <h2>請求書を作成</h2>
+            <h2>既存請求の管理</h2>
             <p>
-              既発行分は変更しません。追加請求は正式確定後に新規追加された明細だけが対象です。紐付け変更や原本差異を追加請求へ自動変換しません。
+              原本、保存済み請求書、旧版の下書きを確認します。日常の作成は「①
+              請求書を作る」から進めてください。
             </p>
             <label className="field">
-              請求区分
+              表示する請求先
               <select
-                aria-label="請求区分"
-                value={kind}
+                aria-label="管理する請求先"
+                value={party}
                 onChange={(e) => {
-                  setKind(e.target.value as typeof kind);
-                  if (e.target.value === "additional") {
-                    setUseTerms(false);
-                    setIssueDay("");
-                    setDueDay("");
-                  }
-                  setApproved(false);
+                  setParty(e.target.value);
+                  setPrintId("");
                 }}
               >
-                <option value="regular">通常請求</option>
-                <option value="additional">追加請求</option>
+                <option value="">月全体</option>
+                {parties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.internal_name} / {p.formal_name}
+                  </option>
+                ))}
               </select>
             </label>
-            {parties
-              .filter((p) => p.active && (!party || p.id === party))
-              .map((p) => (
-                <label className="checkbox-row" key={p.id}>
+          </section>
+          <details className="panel no-print">
+            <summary>旧方式の一括作成・追加請求（既存運用用）</summary>
+            <section className="panel no-print">
+              <h2>請求書を作成</h2>
+              <p>
+                既発行分は変更しません。追加請求は正式確定後に新規追加された明細だけが対象です。紐付け変更や原本差異を追加請求へ自動変換しません。
+              </p>
+              <label className="field">
+                請求区分
+                <select
+                  aria-label="請求区分"
+                  value={kind}
+                  onChange={(e) => {
+                    setKind(e.target.value as typeof kind);
+                    if (e.target.value === "additional") {
+                      setUseTerms(false);
+                      setIssueDay("");
+                      setDueDay("");
+                    }
+                    setApproved(false);
+                  }}
+                >
+                  <option value="regular">通常請求</option>
+                  <option value="additional">追加請求</option>
+                </select>
+              </label>
+              {parties
+                .filter((p) => p.active && (!party || p.id === party))
+                .map((p) => (
+                  <label className="checkbox-row" key={p.id}>
+                    <input
+                      type="checkbox"
+                      aria-label={"請求作成先 " + p.internal_name}
+                      checked={selected.includes(p.id)}
+                      onChange={(e) => {
+                        setSelected((old) =>
+                          e.target.checked
+                            ? [...old, p.id]
+                            : old.filter((id) => id !== p.id),
+                        );
+                        setApproved(false);
+                      }}
+                    />
+                    {p.internal_name}
+                  </label>
+                ))}
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={useTerms}
+                  onChange={(e) => {
+                    setUseTerms(e.target.checked);
+                    setApproved(false);
+                  }}
+                />
+                請求先ごとの締日・請求日・支払期限設定を使用する
+              </label>
+              <p className="hint">
+                通常請求の標準は月末締め・翌月1日請求・翌月末支払。個別設定は請求先マスターで変更できます。追加請求の日付は自動で過去日にせず、請求日・支払期限を確認して手入力してください。
+              </p>
+              <div className="form-grid">
+                <label className="field">
+                  請求日
                   <input
-                    type="checkbox"
-                    aria-label={"請求作成先 " + p.internal_name}
-                    checked={selected.includes(p.id)}
+                    type="date"
+                    value={issueDay}
                     onChange={(e) => {
-                      setSelected((old) =>
-                        e.target.checked
-                          ? [...old, p.id]
-                          : old.filter((id) => id !== p.id),
-                      );
+                      setIssueDay(e.target.value);
                       setApproved(false);
                     }}
                   />
-                  {p.internal_name}
                 </label>
-              ))}
-            <label className="checkbox-row">
-              <input
-                type="checkbox"
-                checked={useTerms}
-                onChange={(e) => {
-                  setUseTerms(e.target.checked);
-                  setApproved(false);
+                <label className="field">
+                  支払期限
+                  <input
+                    type="date"
+                    value={dueDay}
+                    onChange={(e) => {
+                      setDueDay(e.target.value);
+                      setApproved(false);
+                    }}
+                  />
+                </label>
+                <label className="field">
+                  件名
+                  <input
+                    value={subject}
+                    onChange={(e) => {
+                      setSubject(e.target.value);
+                      setApproved(false);
+                    }}
+                  />
+                </label>
+              </div>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={approved}
+                  onChange={(e) => setApproved(e.target.checked)}
+                />
+                対象月・請求先・明細・日付を確認しました
+              </label>
+              <button
+                className="primary"
+                disabled={busy || !approved || !selected.length}
+                onClick={() => void create()}
+              >
+                確認して請求書を作成
+              </button>
+              <button
+                className="secondary spaced"
+                disabled={!invoices.length}
+                onClick={() => {
+                  setPrintId("");
+                  setTimeout(() => window.print(), 100);
                 }}
-              />
-              請求先ごとの締日・請求日・支払期限設定を使用する
-            </label>
-            <p className="hint">
-              通常請求の標準は月末締め・翌月1日請求・翌月末支払。個別設定は請求先マスターで変更できます。追加請求の日付は自動で過去日にせず、請求日・支払期限を確認して手入力してください。
-            </p>
-            <div className="form-grid">
-              <label className="field">
-                請求日
-                <input
-                  type="date"
-                  value={issueDay}
-                  onChange={(e) => {
-                    setIssueDay(e.target.value);
-                    setApproved(false);
-                  }}
-                />
-              </label>
-              <label className="field">
-                支払期限
-                <input
-                  type="date"
-                  value={dueDay}
-                  onChange={(e) => {
-                    setDueDay(e.target.value);
-                    setApproved(false);
-                  }}
-                />
-              </label>
-              <label className="field">
-                件名
-                <input
-                  value={subject}
-                  onChange={(e) => {
-                    setSubject(e.target.value);
-                    setApproved(false);
-                  }}
-                />
-              </label>
-            </div>
-            <label className="checkbox-row">
-              <input
-                type="checkbox"
-                checked={approved}
-                onChange={(e) => setApproved(e.target.checked)}
-              />
-              対象月・請求先・明細・日付を確認しました
-            </label>
-            <button
-              className="primary"
-              disabled={busy || !approved || !selected.length}
-              onClick={() => void create()}
-            >
-              確認して請求書を作成
-            </button>
-            <button
-              className="secondary spaced"
-              disabled={!invoices.length}
-              onClick={() => {
-                setPrintId("");
-                setTimeout(() => window.print(), 100);
-              }}
-            >
-              表示中の請求書をまとめて印刷・PDF保存
-            </button>
-          </section>
+              >
+                表示中の請求書をまとめて印刷・PDF保存
+              </button>
+            </section>
+          </details>
           {invoices.map((i) => (
             <div
               key={i.id}

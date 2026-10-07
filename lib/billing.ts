@@ -379,7 +379,9 @@ export function billingCheck(data: Data, month: string, partyId?: string) {
         x.destination === l.destination &&
         x.quantity === l.quantity &&
         x.price === l.price &&
-        x.kind === l.kind,
+        x.kind === l.kind &&
+        x.product === l.product &&
+        x.unit === l.unit,
     );
     if (same.length)
       issues.push({

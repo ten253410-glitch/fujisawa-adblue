@@ -12,6 +12,9 @@ test("original August totals, independent calculation difference, hierarchy, pre
     .getByRole("button", { name: "請求前チェック・請求書", exact: true })
     .click();
   await page
+    .getByRole("button", { name: "④ 月次集計・照合", exact: true })
+    .click();
+  await page
     .getByRole("button", { name: "実資料8月検証", exact: true })
     .click();
   await expect(
@@ -48,6 +51,12 @@ test("original August totals, independent calculation difference, hierarchy, pre
     .getByLabel("チェックする請求先")
     .selectOption({ label: "Schatz / 株式会社 Schatz" });
   await expect(summary).toContainText("570,290");
+  await page
+    .getByRole("button", { name: "既存請求の管理", exact: true })
+    .click();
+  await page
+    .getByText("旧方式の一括作成・追加請求（既存運用用）", { exact: true })
+    .click();
   await page.getByLabel("請求区分").selectOption("additional");
   await page.getByLabel("請求日", { exact: true }).fill("2026-10-07");
   await page.getByLabel("支払期限", { exact: true }).fill("2026-10-31");
@@ -183,6 +192,7 @@ test("existing schema 4 browser data migrates once and supports reviewed relinki
   await page
     .getByRole("button", { name: "請求前チェック・請求書", exact: true })
     .click();
+  await page.getByRole("button", { name: "⑤ 請求先設定", exact: true }).click();
   await page
     .getByRole("button", { name: "請求先・紐付け", exact: true })
     .click();
@@ -250,6 +260,9 @@ test("previous August history attaches to original reference without increasing 
     .getByRole("button", { name: "請求前チェック・請求書", exact: true })
     .click();
   await page
+    .getByRole("button", { name: "④ 月次集計・照合", exact: true })
+    .click();
+  await page
     .getByRole("button", { name: "実資料8月検証", exact: true })
     .click();
   await page
@@ -299,7 +312,16 @@ test("ordinary monthly invoice defaults, recalculation, confirmation and explici
   await page
     .getByRole("button", { name: "請求前チェック・請求書", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "④ 月次集計・照合", exact: true })
+    .click();
   await page.getByLabel("チェックする請求先").selectOption(p.id);
+  await page
+    .getByRole("button", { name: "既存請求の管理", exact: true })
+    .click();
+  await page
+    .getByText("旧方式の一括作成・追加請求（既存運用用）", { exact: true })
+    .click();
   await page.getByLabel("請求作成先 G.TRES", { exact: true }).check();
   await page.getByLabel("対象月・請求先・明細・日付を確認しました").check();
   await page

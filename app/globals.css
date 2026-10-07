@@ -1419,3 +1419,48 @@ textarea::placeholder {
     display: table-header-group;
   }
 }
+
+.billing-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+.billing-menu button {
+  text-align: left;
+  padding: 1rem;
+}
+.billing-menu button[aria-pressed="true"],
+.tabs button[aria-pressed="true"] {
+  background: #155e75;
+  color: white;
+}
+.billing-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0;
+  list-style: none;
+}
+.billing-steps li {
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.4rem;
+  background: #edf2f7;
+}
+.billing-steps li[aria-current="step"] {
+  background: #155e75;
+  color: white;
+  font-weight: bold;
+}
+.billing-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.billing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}

@@ -10,6 +10,9 @@ test("explicit Schatz October carry preserves August original and survives reloa
     .getByRole("button", { name: "請求前チェック・請求書", exact: true })
     .click();
   await page
+    .getByRole("button", { name: "④ 月次集計・照合", exact: true })
+    .click();
+  await page
     .getByRole("button", { name: "実資料8月検証", exact: true })
     .click();
   await page
@@ -17,16 +20,17 @@ test("explicit Schatz October carry preserves August original and survives reloa
     .check();
   await page.getByRole("button", { name: "照合した8月実データを登録" }).click();
   await page.getByLabel("請求チェック対象月").fill("2026-10");
+  await page.getByRole("button", { name: "⑤ 請求先設定", exact: true }).click();
   await page
     .getByRole("button", { name: "税・請求書設定", exact: true })
     .click();
   await page.getByLabel("税率（%）").fill("10");
   await page.getByRole("button", { name: "確認した設定を保存" }).click();
   await page
-    .getByRole("button", { name: "未請求・統合請求", exact: true })
+    .getByRole("button", { name: "② 未請求を処理", exact: true })
     .click();
   await page
-    .getByLabel("統合請求の請求先")
+    .getByLabel("未請求の請求先")
     .selectOption({ label: "Schatz / 株式会社 Schatz" });
   await expect(
     page.getByText("過去の未請求実績があります", { exact: true }),
@@ -81,11 +85,17 @@ test("explicit Schatz October carry preserves August original and survives reloa
     .click();
   await page.getByLabel("請求チェック対象月").fill("2026-10");
   await page
-    .getByRole("button", { name: "未請求・統合請求", exact: true })
+    .getByRole("button", { name: "② 未請求を処理", exact: true })
     .click();
   await page
-    .getByLabel("統合請求の請求先")
+    .getByLabel("未請求の請求先")
     .selectOption({ label: "Schatz / 株式会社 Schatz" });
+  await page
+    .getByText("この月の保存済み請求書・旧版を確認する", { exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: /株式会社 Schatz .*確定済み/ })
+    .click();
   await expect(
     page.getByRole("button", {
       name: "この請求書を印刷・PDF保存",
@@ -160,13 +170,11 @@ test("TWS parent mapping and unified invoice retain both delivery destinations",
     .click();
   await page.getByLabel("請求チェック対象月").fill("2026-09");
   await page
-    .getByRole("button", { name: "未請求・統合請求", exact: true })
+    .getByRole("button", { name: "③ 統合請求設定", exact: true })
     .click();
-  await page.getByLabel("統合請求の請求先").selectOption("tws-parent");
+  await page.getByLabel("統合設定の請求先").selectOption("tws-parent");
   for (const c of cs)
-    await page
-      .getByRole("checkbox", { name: new RegExp("^" + c.name) })
-      .check();
+    await page.locator(`input[name="customer"][value="${c.id}"]`).check();
   await page
     .getByLabel("変更理由", { exact: true })
     .fill("TWS本牧・平塚を統合");
@@ -176,14 +184,19 @@ test("TWS parent mapping and unified invoice retain both delivery destinations",
   await page
     .getByRole("button", { name: "選択給液先を統合請求先へ紐付け" })
     .click();
-  const boxes = page.getByRole("checkbox", { name: /今回請求 / });
-  await expect(boxes).toHaveCount(2);
-  await boxes.nth(0).check();
-  await boxes.nth(1).check();
   await page
-    .getByLabel("選択明細と請求先・対象月・まとめ方を確認しました")
-    .check();
-  await page.getByRole("button", { name: "選択明細から下書き作成" }).click();
+    .getByRole("button", { name: "① 請求書を作る", exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: "請求先を選択 TWS", exact: true })
+    .click();
+  await expect(
+    page.getByRole("checkbox", { name: /通常請求明細 / }),
+  ).toHaveCount(2);
+  await page.getByLabel("通常請求の明細・金額・日付を確認しました").check();
+  await page
+    .getByRole("button", { name: "請求書プレビューへ", exact: true })
+    .click();
   await expect(page.locator(".invoice-page")).toHaveCount(1);
   await expect(page.locator(".invoice-page")).toContainText("27,000");
   await page
