@@ -103,36 +103,58 @@ test("unpaid starts with all accounts; September carry, October duplicate preven
   await expect(
     page.getByRole("columnheader", { name: "請求先／本来の対象月" }),
   ).toBeVisible();
-  // Choose the two August lines, then change the target month without losing their selection.
   await page.getByRole("checkbox", { name: /今回請求 EG八王子 / }).check();
   await page
     .getByRole("checkbox", { name: /今回請求 デイライン西東京営業所 / })
     .check();
-  await page.getByLabel("請求チェック対象月").fill("2026-09");
-  await expect(
-    page.getByRole("checkbox", { name: /今回請求 EG八王子 / }),
-  ).toBeChecked();
-  await expect(page.getByText(/請求先全体：/)).toContainText("940 L");
-  await expect(page.getByText(/請求先全体：/)).toContainText("61,100");
+  await page.getByLabel("請求する月", { exact: true }).selectOption("2026-09");
+  await expect(page.getByLabel("未請求の処理内容")).toContainText("940 L");
+  await expect(page.getByLabel("未請求の処理内容")).toContainText("61,100");
+  await page.getByLabel("未請求理由（一括・任意）").fill("8月請求漏れ");
   await page
-    .getByLabel("選択明細と請求先・対象月・まとめ方を確認しました")
-    .check();
-  await page.getByRole("button", { name: "選択明細から下書き作成" }).click();
-  await expect(page.locator(".invoice-page")).toContainText(
-    "2026年8月未請求分",
-  );
+    .getByRole("button", {
+      name: "選択した2件を2026年9月請求へ追加",
+      exact: true,
+    })
+    .click();
+  await page
+    .getByRole("button", { name: "① 請求書を作る", exact: true })
+    .click();
+  await page.getByLabel("請求チェック対象月").fill("2026-09");
+  await page
+    .getByRole("button", { name: "請求先を選択 Schatz", exact: true })
+    .click();
+  await expect(
+    page.getByRole("checkbox", { name: /通常請求明細 / }),
+  ).toHaveCount(2);
+  await expect(
+    page.getByText("2026年8月未請求分", { exact: true }),
+  ).toHaveCount(2);
+  await page.getByLabel("通常請求の明細・金額・日付を確認しました").check();
+  await page
+    .getByRole("button", { name: "請求書プレビューへ", exact: true })
+    .click();
   await page
     .getByLabel("この請求書の明細・数量・金額・税額を確認しました")
     .check();
   await page
     .getByRole("button", { name: "この請求書を確定", exact: true })
     .click();
-  await page.getByLabel("請求チェック対象月").fill("2026-10");
+  await page
+    .getByRole("button", { name: "② 未請求を処理", exact: true })
+    .click();
+  await page
+    .getByLabel("未請求の請求先")
+    .selectOption({ label: "Schatz / 株式会社 Schatz" });
+  await page.getByLabel("請求する月", { exact: true }).selectOption("2026-10");
   await expect(page.getByRole("checkbox", { name: /今回請求 / })).toHaveCount(
     0,
   );
   await expect(
-    page.getByRole("button", { name: "選択明細から下書き作成" }),
+    page.getByRole("button", {
+      name: "選択した0件を2026年10月請求へ追加",
+      exact: true,
+    }),
   ).toBeDisabled();
   await page
     .getByRole("button", { name: "③ 統合請求設定", exact: true })
@@ -204,6 +226,9 @@ test("unpaid starts with all accounts; September carry, October duplicate preven
   await expect(page.getByRole("checkbox", { name: /今回請求 / })).toHaveCount(
     0,
   );
+  await page
+    .getByText("請求書確定済み・履歴を確認する", { exact: true })
+    .click();
   await expect(page.getByText(new RegExp(schatz.id)).first()).toBeVisible();
 });
 

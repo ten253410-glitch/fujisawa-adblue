@@ -1,19 +1,21 @@
 "use client";
-import SelectedInvoiceView from "./selected-invoice-view";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Data } from "@/lib/domain";
 import type { LocalCommit } from "./local-business";
 import {
   unpaidLines,
   pendingInfo,
-  pastLabel,
   sourceBillingMonth,
-  createSelectedInvoices,
+  unassignedLines,
+  assignUnpaidToMonth,
+  cancelMonthAssignment,
+  draftForLine,
+  monthLabel,
+  nextBillingMonth,
   updatePending,
   consolidateDestinations,
 } from "@/lib/billing-plan";
-import { ledger, lineParty, monthRule } from "@/lib/billing";
-import { billingPeriod } from "@/lib/billing-accounts";
+import { ledger, lineParty } from "@/lib/billing";
 import { sumDecimal, formatDecimal } from "@/lib/local-flow";
 export default function BillingPlanWorkspace({
   data,
@@ -30,24 +32,33 @@ export default function BillingPlanWorkspace({
 }) {
   const [payer, setPayer] = useState(""),
     [selected, setSelected] = useState<string[]>([]),
-    [mode, setMode] = useState<"unified" | "destination">("unified"),
-    [approved, setApproved] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
-    [previewIds, setPreviewIds] = useState<string[]>([]),
-    [search, setSearch] = useState("");
-  useEffect(() => {
-    setApproved(false);
-    setPreviewIds([]);
-    setError("");
-    setNotice("");
-  }, [month]);
-  const party = data.billingParties?.find((p) => p.id === payer),
-    period = party ? billingPeriod(month, party) : null,
-    lines = unpaidLines(data, payer),
+    [search, setSearch] = useState(""),
+    [targetMonth, setTargetMonth] = useState(() =>
+      nextBillingMonth(
+        unassignedLines(data)
+          .map((l) => sourceBillingMonth(data, l))
+          .sort()[0] || month,
+      ),
+    ),
+    [batchReason, setBatchReason] = useState("");
+  const lines = unassignedLines(data, payer),
     picked = lines.filter((l) => selected.includes(l.source_id)),
-    past = lines.filter((l) => period && l.actual_day < period.start);
+    processing = unpaidLines(data, payer).filter(
+      (l) =>
+        pendingInfo(data, l).assigned_month || draftForLine(data, l.source_id),
+    );
+  const startMonth = nextBillingMonth(
+      unassignedLines(data)
+        .map((l) => sourceBillingMonth(data, l))
+        .sort()[0] || month,
+    ),
+    months = [startMonth];
+  for (let i = 1; i < 36; i++) months.push(nextBillingMonth(months[i - 1]));
+  if (!months.includes(targetMonth)) months.push(targetMonth);
+  months.sort();
   async function save(fn: () => Data, action: string, id = payer) {
     setBusy(true);
     setError("");
@@ -82,32 +93,21 @@ export default function BillingPlanWorkspace({
         "billing_plan",
         id,
         action,
-        JSON.stringify({ month, payer, selected, mode, records }),
+        JSON.stringify({ month, targetMonth, payer, selected, records }),
       );
-      if (action === "CREATE_SELECTED_INVOICES")
-        setPreviewIds(
-          (next.billingInvoices || [])
-            .filter(
-              (i) =>
-                !(data.billingInvoices || []).some((old) => old.id === i.id),
-            )
-            .map((i) => i.id),
-        );
-      setNotice("保存しました");
+      setNotice(
+        action === "ASSIGN_BILLING_MONTH"
+          ? `${selected.length}件を${monthLabel(targetMonth)}請求へ追加しました。①で明細を確認して請求書を作成してください。`
+          : "保存しました",
+      );
       setSelected([]);
-      setApproved(false);
+      setBatchReason("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "保存できません");
     } finally {
       setBusy(false);
     }
   }
-  const invoices = (data.billingInvoices || []).filter(
-    (i) =>
-      i.selection_mode &&
-      i.month === month &&
-      (!payer || i.billing_party_id === payer),
-  );
   const payerField = (
     <label className="field">
       {view === "integration" ? "統合・変更後の請求先" : "請求先で絞り込み"}
@@ -119,8 +119,6 @@ export default function BillingPlanWorkspace({
         onChange={(e) => {
           setPayer(e.target.value);
           setSelected([]);
-          setApproved(false);
-          setPreviewIds([]);
         }}
       >
         <option value="">
@@ -214,140 +212,106 @@ export default function BillingPlanWorkspace({
       <section className="panel no-print">
         <h2>未請求を処理</h2>
         <p>
-          給液日は変更せず、選択した明細だけを請求対象月 {month}{" "}
-          に追加します。既発行原本は保持します。
+          請求漏れの明細を、次に請求する月へ送ります。元の給液日・固定単価・本来の対象月は変更しません。請求書の作成・確定は①で行います。
         </p>
         {error && (
           <p role="alert" className="alert error">
             {error}
           </p>
         )}
-        {notice && <p role="status">{notice}</p>}
+        {notice && (
+          <p role="status" className="alert success">
+            {notice}
+          </p>
+        )}
         {payerField}
-        <label className="field">
-          請求のまとめ方
-          <select
-            aria-label="請求のまとめ方"
-            value={mode}
-            onChange={(e) => {
-              setMode(e.target.value as typeof mode);
-              setApproved(false);
-            }}
-          >
-            <option value="unified">請求先単位で統合</option>
-            <option value="destination">給液先別に請求</option>
-          </select>
-        </label>
-        {!monthRule(data, month) && (
-          <div className="alert">
-            対象月の税設定が未確認です。「税・請求書設定」で対象月の設定を確認・保存してください。
-          </div>
-        )}
-        {payer && past.length > 0 && (
-          <div className="alert">
-            <strong>過去の未請求実績があります</strong>
-            <p>
-              過去月 {past.length}{" "}
-              件。今回請求する明細にチェックしてください。自動追加はしません。
-            </p>
-          </div>
-        )}
-        {
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  {[
-                    "追加",
-                    "実給液日／区分",
-                    "給液先・場所",
-                    "請求先／本来の対象月",
-                    "数量／AdBlue L",
-                    "固定単価",
-                    "税抜金額",
-                    "登録日",
-                    "未請求理由／発見日／請求予定月",
-                  ].map((h) => (
-                    <th key={h}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((l) => {
-                  const info = pendingInfo(data, l),
-                    linePayer = data.billingParties?.find(
-                      (p) => p.id === lineParty(data, l),
-                    ),
-                    rowPeriod = linePayer
-                      ? billingPeriod(month, linePayer)
-                      : null;
-                  return (
-                    <tr key={l.source_id}>
-                      <td>
-                        <input
-                          type="checkbox"
-                          aria-label={
-                            "今回請求 " + l.destination + " " + l.actual_day
-                          }
-                          disabled={!lineParty(data, l)}
-                          checked={selected.includes(l.source_id)}
-                          onChange={(e) => {
-                            if (e.target.checked && !payer)
-                              setPayer(lineParty(data, l) || "");
-                            setSelected(
-                              e.target.checked
-                                ? [...selected, l.source_id]
-                                : selected.filter((id) => id !== l.source_id),
-                            );
-                            setApproved(false);
-                          }}
-                        />
-                      </td>
-                      <td>
-                        {l.actual_day}
-                        <br />
-                        {rowPeriod && l.actual_day < rowPeriod.start
-                          ? pastLabel(l)
-                          : rowPeriod && l.actual_day > rowPeriod.end
-                            ? "今回の請求月より後の実績"
-                            : "今回月の通常実績"}
-                      </td>
-                      <td>
-                        {
-                          data.customers.find((c) => c.id === l.customer_id)
-                            ?.name
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                {[
+                  "選択",
+                  "実給液日",
+                  "給液先／場所・商品",
+                  "請求先／本来の対象月",
+                  "数量／AdBlue L",
+                  "固定単価",
+                  "税抜金額",
+                  "状態・個別編集",
+                ].map((h) => (
+                  <th key={h}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {lines.map((l) => {
+                const info = pendingInfo(data, l);
+                return (
+                  <tr key={l.source_id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        aria-label={
+                          "今回請求 " + l.destination + " " + l.actual_day
                         }
-                        <br />
-                        {l.destination}
-                      </td>
-                      <td>
-                        {data.billingParties?.find(
-                          (p) => p.id === lineParty(data, l),
-                        )?.internal_name || "未設定"}
-                        <br />
-                        {sourceBillingMonth(data, l)}
-                      </td>
-                      <td>
-                        {l.quantity}
-                        {l.unit}
-                        <small>AdBlue換算 {l.liters} L</small>
-                      </td>
-                      <td>{l.price}</td>
-                      <td>{formatDecimal(l.amount || "0")}円</td>
-                      <td>{info.registered_at || "旧データに記録なし"}</td>
-                      <td>
+                        disabled={!lineParty(data, l)}
+                        checked={selected.includes(l.source_id)}
+                        onChange={(e) => {
+                          setSelected(
+                            e.target.checked
+                              ? [...selected, l.source_id]
+                              : selected.filter((id) => id !== l.source_id),
+                          );
+                          if (
+                            e.target.checked &&
+                            targetMonth <= sourceBillingMonth(data, l)
+                          )
+                            setTargetMonth(
+                              nextBillingMonth(sourceBillingMonth(data, l)),
+                            );
+                        }}
+                      />
+                    </td>
+                    <td>{l.actual_day}</td>
+                    <td>
+                      {data.customers.find((c) => c.id === l.customer_id)?.name}
+                      <br />
+                      {l.destination}
+                      <small>{l.product}</small>
+                    </td>
+                    <td>
+                      {data.billingParties?.find(
+                        (p) => p.id === lineParty(data, l),
+                      )?.internal_name || "未設定"}
+                      <br />
+                      {monthLabel(sourceBillingMonth(data, l))}
+                    </td>
+                    <td>
+                      {l.quantity}
+                      {l.unit}
+                      <small>AdBlue換算 {l.liters} L</small>
+                    </td>
+                    <td>{l.price}</td>
+                    <td>{formatDecimal(l.amount || "0")}円</td>
+                    <td>
+                      未請求
+                      <details>
+                        <summary>個別編集</summary>
+                        <p>
+                          登録日：{info.registered_at || "旧データに記録なし"}
+                        </p>
                         <form
+                          key={JSON.stringify(info)}
                           onSubmit={(e) => {
                             e.preventDefault();
                             const f = new FormData(e.currentTarget);
                             void save(
                               () =>
                                 updatePending(data, l.source_id, {
+                                  ...info,
                                   reason: String(f.get("reason")),
                                   discovered_on:
                                     String(f.get("discovery")) || null,
-                                  planned_month:
-                                    String(f.get("planned")) || null,
                                   invoice_id: null,
                                 }),
                               "UPDATE_PENDING",
@@ -355,134 +319,171 @@ export default function BillingPlanWorkspace({
                             );
                           }}
                         >
-                          <input
-                            aria-label={"未請求理由 " + l.destination}
-                            name="reason"
-                            defaultValue={info.reason}
-                            required
-                          />
-                          <input
-                            aria-label={"発見日 " + l.destination}
-                            name="discovery"
-                            type="date"
-                            defaultValue={info.discovered_on || ""}
-                          />
-                          <input
-                            aria-label={"請求予定月 " + l.destination}
-                            name="planned"
-                            type="month"
-                            defaultValue={info.planned_month || ""}
-                          />
-                          <button disabled={busy}>記録保存</button>
+                          <label className="field">
+                            未請求理由
+                            <input
+                              name="reason"
+                              defaultValue={info.reason}
+                              required
+                            />
+                          </label>
+                          <label className="field">
+                            発見日
+                            <input
+                              name="discovery"
+                              type="date"
+                              defaultValue={info.discovered_on || ""}
+                            />
+                          </label>
+                          <button disabled={busy}>個別記録を保存</button>
                         </form>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        }
-        <h3>確定前の選択内容</h3>
-        <p>
-          今回月{" "}
-          {picked.filter((l) => period && l.actual_day >= period.start).length}
-          件 ／ 過去未請求{" "}
-          {picked.filter((l) => period && l.actual_day < period.start).length}件
-        </p>
-        {[...new Set(picked.map((l) => l.destination))].map((dest) => (
-          <p key={dest}>
-            {dest}：
-            {sumDecimal(
-              picked.filter((l) => l.destination === dest).map((l) => l.liters),
-            )}{" "}
-            L ／ 税抜{" "}
-            {formatDecimal(
-              sumDecimal(
-                picked
-                  .filter((l) => l.destination === dest)
-                  .map((l) => l.amount || "0"),
-              ),
-            )}
-            円
-          </p>
-        ))}
-        <strong>
-          請求先全体：{sumDecimal(picked.map((l) => l.liters))} L ／ 税抜{" "}
-          {formatDecimal(sumDecimal(picked.map((l) => l.amount || "0")))}円
-        </strong>
-        <p>
-          消費税は選んだまとめ方に従い、請求書ごとに計算します。下書きで税額・税込額を確認してください。
-        </p>
-        <label>
-          <input
-            type="checkbox"
-            checked={approved}
-            onChange={(e) => setApproved(e.target.checked)}
-          />
-          選択明細と請求先・対象月・まとめ方を確認しました
+                      </details>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {lines.length === 0 && <p>請求月が未指定の未請求明細はありません。</p>}
+        <div className="billing-summary" aria-label="未請求の処理内容">
+          <span>未請求明細：{lines.length}件</span>
+          <span>今回選択：{picked.length}件</span>
+          <strong>選択数量：{sumDecimal(picked.map((l) => l.liters))} L</strong>
+          <strong>
+            選択税抜金額：
+            {formatDecimal(sumDecimal(picked.map((l) => l.amount || "0")))}円
+          </strong>
+          <span>追加先：{monthLabel(targetMonth)}請求</span>
+        </div>
+        <label className="field">
+          請求する月
+          <select
+            aria-label="請求する月"
+            value={targetMonth}
+            onChange={(e) => setTargetMonth(e.target.value)}
+          >
+            {months.map((m) => (
+              <option key={m} value={m}>
+                {monthLabel(m)}
+              </option>
+            ))}
+          </select>
         </label>
+        <details>
+          <summary>一覧にない請求月を指定する</summary>
+          <label className="field">
+            請求する月を直接指定
+            <input
+              aria-label="請求する月を直接指定"
+              type="month"
+              value={targetMonth}
+              onChange={(e) => setTargetMonth(e.target.value)}
+            />
+          </label>
+        </details>
+        <label className="field">
+          未請求理由（一括・任意）
+          <input
+            value={batchReason}
+            onChange={(e) => setBatchReason(e.target.value)}
+            placeholder="例：8月請求漏れ"
+          />
+        </label>
+        <p>
+          未記録の発見日は処理日で自動記録します。既に記録された発見日・理由は、一括理由を入力しない限り保持します。
+        </p>
         <button
-          disabled={
-            busy ||
-            !payer ||
-            !selected.length ||
-            !approved ||
-            !monthRule(data, month)
-          }
+          disabled={busy || !picked.length || !targetMonth}
           onClick={() =>
             void save(
               () =>
-                createSelectedInvoices(
+                assignUnpaidToMonth(
                   data,
-                  month,
-                  payer,
                   selected,
-                  mode,
+                  targetMonth,
                   actor,
+                  batchReason,
                 ),
-              "CREATE_SELECTED_INVOICES",
+              "ASSIGN_BILLING_MONTH",
             )
           }
         >
-          選択明細から下書き作成
+          選択した{picked.length}件を{monthLabel(targetMonth)}請求へ追加
         </button>
       </section>
-      <SelectedInvoiceView
-        data={data}
-        actor={actor}
-        invoices={invoices.filter((i) => previewIds.includes(i.id))}
-        busy={busy}
-        save={save}
-      />
-      <details className="panel no-print">
-        <summary>この月の保存済み請求書・旧版を確認する</summary>
-        {invoices.map((i) => (
-          <button key={i.id} onClick={() => setPreviewIds([i.id])}>
-            {i.party_name} ／ {i.net}円 ／{" "}
-            {i.status === "draft"
-              ? "未確定"
-              : i.status === "issued"
-                ? "確定済み"
-                : "取消・旧版"}{" "}
-            ／ {i.id}
-          </button>
-        ))}
-      </details>
       <section className="panel no-print">
-        <h3>請求済み実績の追跡</h3>
+        <h3>請求月へ追加済み・請求書作成中</h3>
+        {processing.length === 0 && <p>追加済みの明細はありません。</p>}
+        {processing.map((l) => {
+          const info = pendingInfo(data, l),
+            draft = draftForLine(data, l.source_id),
+            to = info.assigned_month || draft?.month;
+          return (
+            <details key={l.source_id}>
+              <summary>
+                {l.actual_day} ／ {l.destination} ／{" "}
+                {formatDecimal(l.amount || "0")}円 ／ {to ? monthLabel(to) : ""}
+                請求へ追加済み{draft ? "（請求書作成中）" : ""}
+              </summary>
+              <p>
+                本来の対象月：{monthLabel(sourceBillingMonth(data, l))} ／
+                理由：{info.reason} ／ 発見日：{info.discovered_on || "未記録"}{" "}
+                ／ 追加者：{info.assigned_by || "旧下書き"}
+              </p>
+              {draft ? (
+                <p>
+                  請求書ID：{draft.id}
+                  。①で下書きを取り消してから追加を取り消してください。
+                </p>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const f = new FormData(e.currentTarget);
+                    void save(
+                      () =>
+                        cancelMonthAssignment(
+                          data,
+                          l.source_id,
+                          actor,
+                          String(f.get("reason")),
+                        ),
+                      "CANCEL_BILLING_MONTH",
+                      l.source_id,
+                    );
+                  }}
+                >
+                  <label className="field">
+                    追加取消理由
+                    <input name="reason" required />
+                  </label>
+                  <button disabled={busy}>請求月への追加を取り消す</button>
+                </form>
+              )}
+            </details>
+          );
+        })}
+      </section>
+      <details className="panel no-print">
+        <summary>請求書確定済み・履歴を確認する</summary>
         {ledger(data)
           .filter(
             (l) =>
-              lineParty(data, l) === payer && pendingInfo(data, l).invoice_id,
+              (!payer || lineParty(data, l) === payer) &&
+              pendingInfo(data, l).invoice_id,
           )
           .map((l) => (
             <p key={l.source_id}>
-              {l.actual_day} ／ {l.destination} ／ {l.amount}円 ／ 請求書{" "}
-              {pendingInfo(data, l).invoice_id}
+              {l.actual_day} ／ {l.destination} ／ {l.amount}円 ／
+              請求書確定済み ／ 請求書ID：{pendingInfo(data, l).invoice_id}
             </p>
           ))}
-      </section>
+        <p>
+          請求書確定後の変更は「④
+          月次集計・照合」→「既存請求の管理」で、理由と確認を付けて行います。
+        </p>
+      </details>
     </>
   );
 }

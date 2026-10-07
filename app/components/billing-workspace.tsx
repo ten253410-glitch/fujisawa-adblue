@@ -366,9 +366,9 @@ export default function BillingWorkspace({
             ))}
           </nav>
         )}
-        {section !== "integration" && (
+        {section !== "integration" && section !== "unpaid" && (
           <label className="field">
-            {section === "unpaid" ? "追加する請求対象月" : "対象月"}
+            対象月
             <input
               aria-label="請求チェック対象月"
               type="month"
@@ -392,6 +392,11 @@ export default function BillingWorkspace({
           actor={actor}
           commit={commit}
           month={month}
+          onManage={(payer) => {
+            setParty(payer);
+            setSection("monthly");
+            setTab("legacy");
+          }}
           onUnpaid={() => setSection("unpaid")}
           onSettings={() => {
             setSection("accounts");

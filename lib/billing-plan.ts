@@ -1,4 +1,4 @@
-import type { Data } from "./domain";
+import { japanDate, type Data } from "./domain";
 import {
   ledger,
   lineParty,
@@ -13,6 +13,17 @@ import { billingPeriod, billingDates } from "./billing-accounts";
 import { multiplyNet, sumDecimal } from "./local-flow";
 import { validDate } from "./order-import";
 export type PendingBilling = {
+  original_month?: string;
+  assigned_month?: string | null;
+  assigned_at?: string;
+  assigned_by?: string;
+  assignment_history?: {
+    action: "assign" | "cancel";
+    month: string;
+    at: string;
+    by: string;
+    reason: string;
+  }[];
   reason: string;
   discovered_on: string | null;
   planned_month: string | null;
@@ -94,7 +105,10 @@ export function updatePending(
     fields.invoice_id
   )
     throw Error("未請求理由・発見日・請求予定月を確認してください");
-  return setPending(data, new Set([id]), () => fields);
+  const line = unpaidLines(data).find((l) => l.source_id === id)!;
+  if (pendingInfo(data, line).assigned_month)
+    throw Error("追加済み明細は、先に請求月への追加を取り消してください");
+  return setPending(data, new Set([id]), (old) => ({ ...old, ...fields }));
 }
 function eligible(
   data: Data,
@@ -113,6 +127,9 @@ function eligible(
   return ids.map((id) => {
     const l = all.find((l) => l.source_id === id);
     if (!l) throw Error("請求済み・対象外の明細が含まれています");
+    const assignment = pendingInfo(data, l).assigned_month;
+    if (assignment && assignment !== month)
+      throw Error("この明細は別の請求月へ追加済みです");
     if (l.actual_day > period.end)
       throw Error("未来の給液実績は追加できません");
     if (
@@ -162,7 +179,14 @@ function eligible(
       throw Error("重複候補を確認してください");
     return {
       ...l,
-      notes: [l.notes, l.actual_day < period.start ? pastLabel(l) : ""]
+      notes: [
+        l.notes,
+        l.actual_day < period.start
+          ? assignment
+            ? `${monthLabel(sourceBillingMonth(data, l))}未請求分`
+            : pastLabel(l)
+          : "",
+      ]
         .filter(Boolean)
         .join(" / "),
     };
@@ -345,6 +369,8 @@ export function consolidateDestinations(
 
 /** Original invoice month takes precedence; otherwise use the payer's closing period. */
 export function sourceBillingMonth(data: Data, line: BillingLine) {
+  const frozen = pendingInfo(data, line).original_month;
+  if (frozen) return frozen;
   const original = data.billingInvoices?.find(
     (i) =>
       i.kind === "reference" &&
@@ -357,4 +383,163 @@ export function sourceBillingMonth(data: Data, line: BillingLine) {
     return month;
   const [y, m] = month.split("-").map(Number);
   return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 7);
+}
+
+export function monthLabel(month: string) {
+  const [y, m] = month.split("-");
+  return `${y}年${Number(m)}月`;
+}
+export function nextBillingMonth(month: string) {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 7);
+}
+export function draftForLine(data: Data, id: string) {
+  return data.billingInvoices?.find(
+    (i) => i.status === "draft" && i.lines.some((l) => l.source_id === id),
+  );
+}
+export function unassignedLines(data: Data, payer?: string) {
+  return unpaidLines(data, payer).filter(
+    (l) =>
+      !pendingInfo(data, l).assigned_month && !draftForLine(data, l.source_id),
+  );
+}
+export function normalIssued(data: Data, month: string, payer: string) {
+  return (data.billingInvoices || []).filter(
+    (i) =>
+      i.status === "issued" &&
+      i.month === month &&
+      i.billing_party_id === payer &&
+      i.kind !== "additional",
+  );
+}
+/** Current-period unpaid normal rows and explicitly assigned carryovers only. */
+export function monthlyInvoiceLines(data: Data, month: string, payer: string) {
+  const issued = normalIssued(data, month, payer);
+  return unpaidLines(data, payer).filter((l) => {
+    if (draftForLine(data, l.source_id)) return false;
+    const assigned = pendingInfo(data, l).assigned_month;
+    if (assigned) return assigned === month;
+    if (sourceBillingMonth(data, l) !== month) return false;
+    // A unified/original invoice closes this account; a split invoice closes only its destination.
+    return !issued.some(
+      (i) =>
+        i.selection_mode !== "destination" ||
+        i.lines.some((x) => deliveryKey(data, x) === deliveryKey(data, l)),
+    );
+  });
+}
+export function createMonthlyInvoices(
+  data: Data,
+  month: string,
+  payer: string,
+  ids: string[],
+  mode: "unified" | "destination",
+  actor: string,
+) {
+  const allowed = new Set(
+    monthlyInvoiceLines(data, month, payer).map((l) => l.source_id),
+  );
+  if (ids.some((id) => !allowed.has(id)))
+    throw Error(
+      "通常請求候補ではありません。請求漏れは②から請求月へ追加してください",
+    );
+  return createSelectedInvoices(data, month, payer, ids, mode, actor);
+}
+export function assignUnpaidToMonth(
+  data: Data,
+  ids: string[],
+  month: string,
+  actor: string,
+  reason = "",
+  now = new Date(),
+): Data {
+  if (
+    !ids.length ||
+    new Set(ids).size !== ids.length ||
+    !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)
+  )
+    throw Error("未請求明細と請求する月を選択してください");
+  const available = unassignedLines(data),
+    original = new Map<string, string>();
+  for (const id of ids) {
+    const line = available.find((l) => l.source_id === id);
+    if (!line)
+      throw Error(
+        "請求月へ追加済み・請求書作成中・請求済みの明細は再追加できません",
+      );
+    const payer = lineParty(data, line);
+    if (!data.billingParties?.some((p) => p.id === payer && p.active))
+      throw Error("請求先未設定・停止中の明細があります");
+    const from = sourceBillingMonth(data, line);
+    if (month <= from)
+      throw Error("本来の対象月より後の請求月を選択してください");
+    original.set(id, from);
+  }
+  const timestamp = now.toISOString();
+  return {
+    ...data,
+    sales: data.sales?.map((s) =>
+      ids.includes(s.id) ? { ...s, pending_billing: assigned(s.id) } : s,
+    ),
+    billingItems: data.billingItems?.map((i) =>
+      ids.includes(i.id) ? { ...i, pending_billing: assigned(i.id) } : i,
+    ),
+  };
+  function assigned(id: string): PendingBilling {
+    const old = pendingInfo(
+      data,
+      available.find((l) => l.source_id === id)!,
+    );
+    return {
+      ...old,
+      original_month: original.get(id)!,
+      assigned_month: month,
+      assigned_at: timestamp,
+      assigned_by: actor,
+      planned_month: month,
+      discovered_on: old.discovered_on || japanDate(now),
+      reason: reason.trim() || old.reason,
+      invoice_id: null,
+      assignment_history: [
+        ...(old.assignment_history || []),
+        {
+          action: "assign",
+          month,
+          at: timestamp,
+          by: actor,
+          reason: reason.trim() || old.reason,
+        },
+      ],
+    };
+  }
+}
+export function cancelMonthAssignment(
+  data: Data,
+  id: string,
+  actor: string,
+  reason: string,
+): Data {
+  const line = unpaidLines(data).find((l) => l.source_id === id);
+  if (!line || !pendingInfo(data, line).assigned_month || !reason.trim())
+    throw Error("未確定の追加済み明細と取消理由を確認してください");
+  if (draftForLine(data, id))
+    throw Error(
+      "①で下書きを取り消してから、請求月への追加を取り消してください",
+    );
+  return setPending(data, new Set([id]), (old) => ({
+    ...old,
+    assigned_month: null,
+    planned_month: null,
+    assignment_history: [
+      ...(old.assignment_history || []),
+      {
+        action: "cancel",
+        month: old.assigned_month!,
+        at: new Date().toISOString(),
+        by: actor,
+        reason: reason.trim(),
+      },
+    ],
+  }));
 }

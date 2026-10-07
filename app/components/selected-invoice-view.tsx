@@ -4,7 +4,6 @@ import type { Data } from "@/lib/domain";
 import type { BillingInvoice } from "@/lib/billing";
 import { cancelBillingDraft, confirmBillingInvoice } from "@/lib/billing";
 
-import { releaseInvoice } from "@/lib/billing-accounts";
 import { formatDecimal } from "@/lib/local-flow";
 export default function SelectedInvoiceView({
   data,
@@ -12,12 +11,14 @@ export default function SelectedInvoiceView({
   invoices,
   busy,
   save,
+  onManage,
 }: {
   data: Data;
   actor: string;
   invoices: BillingInvoice[];
   busy: boolean;
   save: (fn: () => Data, action: string, id: string) => Promise<unknown>;
+  onManage?: () => void;
 }) {
   const [printId, setPrintId] = useState("");
   return (
@@ -133,31 +134,14 @@ export default function SelectedInvoiceView({
               </>
             )}
             {i.status === "issued" && i.kind !== "reference" && (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const f = new FormData(e.currentTarget);
-                  if (f.get("checked") === "on")
-                    void save(
-                      () =>
-                        releaseInvoice(
-                          data,
-                          i.id,
-                          actor,
-                          String(f.get("reason")),
-                        ),
-                      "RELEASE_INVOICE",
-                      i.id,
-                    );
-                }}
-              >
-                <input aria-label="解除理由" name="reason" required />
-                <label>
-                  <input name="checked" type="checkbox" required />
-                  旧版を残して未請求に戻すことを確認しました
-                </label>
-                <button disabled={busy}>請求確定解除</button>
-              </form>
+              <p>
+                請求書確定済み。確定後の変更は管理画面で行います。
+                {onManage && (
+                  <button className="secondary" onClick={onManage}>
+                    確定後の変更は管理画面で行う
+                  </button>
+                )}
+              </p>
             )}
             <button
               onClick={() => {

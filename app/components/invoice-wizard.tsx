@@ -3,8 +3,13 @@ import { useState } from "react";
 import type { Data } from "@/lib/domain";
 import type { LocalCommit } from "./local-business";
 import {
-  unpaidLines,
-  createSelectedInvoices,
+  unassignedLines,
+  createMonthlyInvoices,
+  monthlyInvoiceLines,
+  pendingInfo,
+  sourceBillingMonth,
+  monthLabel,
+  normalIssued,
   deliveryKey,
 } from "@/lib/billing-plan";
 import { lineParty, monthRule, taxAmounts } from "@/lib/billing";
@@ -18,6 +23,7 @@ export default function InvoiceWizard({
   month,
   onUnpaid,
   onSettings,
+  onManage,
 }: {
   data: Data;
   actor: string;
@@ -25,6 +31,7 @@ export default function InvoiceWizard({
   month: string;
   onUnpaid: () => void;
   onSettings: () => void;
+  onManage: (payer: string) => void;
 }) {
   const [step, setStep] = useState<"payer" | "details" | "preview">("payer"),
     [payer, setPayer] = useState(""),
@@ -36,25 +43,16 @@ export default function InvoiceWizard({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
-  const unpaid = unpaidLines(data),
-    party = data.billingParties?.find((p) => p.id === payer),
+  const party = data.billingParties?.find((p) => p.id === payer),
     period = party ? billingPeriod(month, party) : null,
     rule = monthRule(data, month);
-  const current = (id: string) => {
-    const p = data.billingParties!.find((p) => p.id === id)!,
-      range = billingPeriod(month, p);
-    return unpaid.filter(
-      (l) =>
-        lineParty(data, l) === id &&
-        l.actual_day >= range.start &&
-        l.actual_day <= range.end,
-    );
-  };
+  const current = (id: string) => monthlyInvoiceLines(data, month, id);
   const lines = party ? current(payer) : [],
     picked = lines.filter((l) => selected.includes(l.source_id)),
-    old = unpaid.filter(
+    old = unassignedLines(data, payer).filter(
       (l) =>
-        lineParty(data, l) === payer && period && l.actual_day < period.start,
+        sourceBillingMonth(data, l) <= month &&
+        !lines.some((candidate) => candidate.source_id === l.source_id),
     );
   const net = sumDecimal(picked.map((l) => l.amount || "0"));
   const totals = rule
@@ -203,7 +201,14 @@ export default function InvoiceWizard({
                           )}
                           円
                         </td>
-                        <td>{ls.length}件</td>
+                        <td>
+                          {ls.length}件
+                          {normalIssued(data, month, p.id).length > 0 && (
+                            <small>
+                              {monthLabel(month)}の通常請求は発行済み
+                            </small>
+                          )}
+                        </td>
                         <td>
                           <button
                             aria-label={"請求先を選択 " + p.internal_name}
@@ -219,7 +224,7 @@ export default function InvoiceWizard({
             </table>
           </div>
           <p className="hint">
-            この月の未請求明細の予定額です。過去の未請求分はここへ自動追加しません。商品・無償貸与も明細件数に含みます。
+            この請求月の通常明細と、②でこの月へ追加済みの明細の予定額です。未処理の請求漏れは混在させません。
           </p>
         </section>
       )}
@@ -238,10 +243,16 @@ export default function InvoiceWizard({
             {billingDates(month, party).issued_on} ／ 支払期限{" "}
             {billingDates(month, party).due_on}
           </p>
+          {normalIssued(data, month, payer).length > 0 && (
+            <p className="alert">
+              {monthLabel(month)}
+              の通常請求は発行済みです。既発行の内容は変更しません。
+            </p>
+          )}
           {old.length > 0 && (
             <div className="alert">
-              <strong>過去の未請求実績があります</strong>
-              <p>{old.length}件。今回月の明細には自動追加しません。</p>
+              <strong>未処理の請求漏れがあります</strong>
+              <p>{old.length}件。②で請求する月へ送ってください。</p>
               <button onClick={onUnpaid}>未請求を処理へ</button>
             </div>
           )}
@@ -286,7 +297,14 @@ export default function InvoiceWizard({
                           }}
                         />
                       </td>
-                      <td>{l.actual_day}</td>
+                      <td>
+                        {l.actual_day}
+                        {pendingInfo(data, l).assigned_month === month && (
+                          <small>
+                            {monthLabel(sourceBillingMonth(data, l))}未請求分
+                          </small>
+                        )}
+                      </td>
                       <td>
                         {
                           data.customers.find((c) => c.id === l.customer_id)
@@ -358,7 +376,7 @@ export default function InvoiceWizard({
               onClick={() =>
                 void save(
                   () =>
-                    createSelectedInvoices(
+                    createMonthlyInvoices(
                       data,
                       month,
                       payer,
@@ -427,6 +445,7 @@ export default function InvoiceWizard({
             invoices={invoices.filter((i) => previewIds.includes(i.id))}
             busy={busy}
             save={save}
+            onManage={() => onManage(payer)}
           />
         </>
       )}

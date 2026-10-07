@@ -1,4 +1,4 @@
-import { confirmSelectedInvoice } from "./billing-plan";
+import { confirmSelectedInvoice, pendingInfo } from "./billing-plan";
 import type { Data } from "./domain";
 import { multiplyNet, sumDecimal } from "./local-flow";
 import { additionalEligible, isInBillingMonth } from "./billing-accounts";
@@ -471,6 +471,24 @@ export function makeBillingInvoice(
   );
   if (!lines.length) throw new Error("未請求の売上がありません");
   if (
+    lines.some(
+      (l) =>
+        pendingInfo(data, l).assigned_month &&
+        pendingInfo(data, l).assigned_month !== month,
+    )
+  )
+    throw new Error("別の請求月へ追加済みの明細があります");
+  if (
+    lines.some((l) =>
+      data.billingInvoices?.some(
+        (i) =>
+          i.status === "draft" &&
+          i.lines.some((x) => x.source_id === l.source_id),
+      ),
+    )
+  )
+    throw new Error("別の未確定請求書で選択済みです");
+  if (
     (data.billingInvoices || []).some(
       (i) =>
         i.status === "draft" &&
@@ -575,6 +593,11 @@ export function confirmBillingInvoice(
         : issues.map((i) => i.message).join(" / "),
     );
   for (const l of invoice.lines) {
+    if (
+      pendingInfo(data, l).assigned_month &&
+      pendingInfo(data, l).assigned_month !== invoice.month
+    )
+      throw new Error("別の請求月へ追加済みの明細です");
     if (issuedCoverage(data, l.source_id).length)
       throw new Error("この明細は請求済みです");
     const current = check.lines.find((x) => x.source_id === l.source_id);
@@ -757,6 +780,36 @@ export function validateBillingData(data: Data) {
   }
   for (const source of [...(data.sales || []), ...items]) {
     const p = source.pending_billing;
+    if (
+      p &&
+      ((p.original_month !== undefined &&
+        !/^\d{4}-(0[1-9]|1[0-2])$/.test(p.original_month)) ||
+        (p.assigned_month !== undefined &&
+          p.assigned_month !== null &&
+          (!p.original_month ||
+            !/^\d{4}-(0[1-9]|1[0-2])$/.test(p.assigned_month) ||
+            p.assigned_month <= p.original_month ||
+            typeof p.assigned_by !== "string" ||
+            !p.assigned_at ||
+            !Number.isFinite(Date.parse(p.assigned_at)) ||
+            p.planned_month !== p.assigned_month)) ||
+        (p.assignment_history !== undefined &&
+          (!Array.isArray(p.assignment_history) ||
+            p.assignment_history.some(
+              (h) =>
+                !["assign", "cancel"].includes(h.action) ||
+                !/^\d{4}-(0[1-9]|1[0-2])$/.test(h.month) ||
+                !Number.isFinite(Date.parse(h.at)) ||
+                typeof h.by !== "string" ||
+                typeof h.reason !== "string",
+            ))) ||
+        (p.assigned_month &&
+          p.invoice_id &&
+          !invoices.some(
+            (i) => i.id === p.invoice_id && i.month === p.assigned_month,
+          )))
+    )
+      throw new Error("請求月への追加情報が不正です");
     if (
       p &&
       (typeof p.reason !== "string" ||
