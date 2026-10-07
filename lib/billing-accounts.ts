@@ -248,6 +248,10 @@ export function relinkAccount(
   };
 }
 export function recalculateDraft(data: Data, id: string, actor: string): Data {
+  if (data.billingInvoices?.find((i) => i.id === id)?.selection_mode)
+    throw new Error(
+      "選択式の下書きは取り消して明細を選択し直してください。自動追加はしません",
+    );
   const invoice = data.billingInvoices?.find((i) => i.id === id);
   if (!invoice || invoice.status !== "draft")
     throw new Error("未確定請求書だけを再計算できます");
@@ -334,12 +338,21 @@ export function releaseInvoice(
           billed_at: null,
           billed_by: null,
           billing_note: "請求確定解除：" + reason,
+          ...(s.pending_billing
+            ? { pending_billing: { ...s.pending_billing, invoice_id: null } }
+            : {}),
         }
       : s,
   );
   next.billingItems = data.billingItems?.map((i) =>
     ids.has(i.id) && !issuedCoverage(next, i.id).length
-      ? { ...i, status: "unbilled" }
+      ? {
+          ...i,
+          status: "unbilled",
+          ...(i.pending_billing
+            ? { pending_billing: { ...i.pending_billing, invoice_id: null } }
+            : {}),
+        }
       : i,
   );
   return next;

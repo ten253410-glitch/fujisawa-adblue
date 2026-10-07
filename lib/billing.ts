@@ -1,3 +1,4 @@
+import { confirmSelectedInvoice } from "./billing-plan";
 import type { Data } from "./domain";
 import { multiplyNet, sumDecimal } from "./local-flow";
 import { additionalEligible, isInBillingMonth } from "./billing-accounts";
@@ -21,6 +22,7 @@ export type BillingAccount = BillingParty;
 export type TransactionCategory =
   "normal" | "internal" | "purchase" | "excluded";
 export type BillingItem = {
+  pending_billing?: import("./billing-plan").PendingBilling;
   id: string;
   billing_party_id: string | null;
   customer_id: string | null;
@@ -67,6 +69,8 @@ export type BillingLine = {
   notes: string;
 };
 export type BillingInvoice = {
+  selection_mode?: "unified" | "destination";
+  delivery_scope?: string;
   id: string;
   billing_party_id: string;
   month: string;
@@ -132,11 +136,12 @@ export function taxAmounts(net: string, rule: TaxRule) {
 export function monthRule(data: Data, month: string) {
   return (data.taxRules || []).find((r) => r.month === month);
 }
-export function ledger(data: Data, month: string): BillingLine[] {
+export function ledger(data: Data, month?: string): BillingLine[] {
   const result: BillingLine[] = [];
   for (const s of data.sales || []) {
     if (
-      !isInBillingMonth(data, s.delivered_on, s.billing_party_id, month) ||
+      (month &&
+        !isInBillingMonth(data, s.delivered_on, s.billing_party_id, month)) ||
       (s.transaction_category && s.transaction_category !== "normal")
     )
       continue;
@@ -166,7 +171,7 @@ export function ledger(data: Data, month: string): BillingLine[] {
   }
   for (const i of data.billingItems || []) {
     if (
-      !isInBillingMonth(data, i.day, i.billing_party_id, month) ||
+      (month && !isInBillingMonth(data, i.day, i.billing_party_id, month)) ||
       i.category !== "normal"
     )
       continue;
@@ -518,6 +523,7 @@ export function confirmBillingInvoice(
   actor: string,
 ): Data {
   const invoice = (data.billingInvoices || []).find((i) => i.id === id);
+  if (invoice?.selection_mode) return confirmSelectedInvoice(data, id, actor);
   if (!invoice || invoice.status !== "draft")
     throw new Error("未確定の請求書を選択してください");
   if (ledger(data, invoice.month).some((l) => !lineParty(data, l)))
@@ -747,7 +753,34 @@ export function validateBillingData(data: Data) {
         throw new Error("売上の単位換算が不正です");
     }
   }
+  for (const source of [...(data.sales || []), ...items]) {
+    const p = source.pending_billing;
+    if (
+      p &&
+      (typeof p.reason !== "string" ||
+        !p.reason.trim() ||
+        (p.discovered_on !== null && !validDate(p.discovered_on)) ||
+        (p.planned_month !== null &&
+          !/^\d{4}-(0[1-9]|1[0-2])$/.test(p.planned_month)) ||
+        (p.invoice_id !== null &&
+          !invoices.some(
+            (i) =>
+              i.id === p.invoice_id &&
+              i.status === "issued" &&
+              i.lines.some((l) => l.source_id === source.id),
+          )))
+    )
+      throw new Error("未請求管理情報が不正です");
+  }
   for (const i of invoices) {
+    if (
+      i.selection_mode &&
+      (!["unified", "destination"].includes(i.selection_mode) ||
+        typeof i.delivery_scope !== "string" ||
+        !/^\d{4}-(0[1-9]|1[0-2])$/.test(i.month) ||
+        i.kind === "reference")
+    )
+      throw new Error("選択式請求書の範囲が不正です");
     if (
       !parties.some((p) => p.id === i.billing_party_id) ||
       !["regular", "additional", "reference"].includes(i.kind) ||

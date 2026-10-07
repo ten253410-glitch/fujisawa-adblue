@@ -1,4 +1,7 @@
 "use client";
+import { unpaidLines } from "@/lib/billing-plan";
+import { billingPeriod } from "@/lib/billing-accounts";
+import BillingPlanWorkspace from "./billing-plan-workspace";
 import { AccountFields, readAccountFields } from "./account-directory";
 import {
   billingDates,
@@ -47,7 +50,7 @@ export default function BillingWorkspace({
     Record<string, boolean>
   >({});
   const [tab, setTab] = useState<
-      "check" | "masters" | "august" | "items" | "settings"
+      "check" | "masters" | "august" | "items" | "settings" | "plan"
     >("check"),
     [month, setMonth] = useState("2026-08"),
     [party, setParty] = useState(""),
@@ -303,6 +306,7 @@ export default function BillingWorkspace({
         <div className="tabs wrap">
           {[
             ["check", "請求前チェック"],
+            ["plan", "未請求・統合請求"],
             ["masters", "請求先・紐付け"],
             ["august", "実資料8月検証"],
             ["items", "商品・貸与・対象外"],
@@ -337,6 +341,15 @@ export default function BillingWorkspace({
           />
         </label>
       </div>
+      {tab === "plan" && (
+        <BillingPlanWorkspace
+          key={month}
+          data={data}
+          actor={actor}
+          commit={commit}
+          month={month}
+        />
+      )}
       {tab === "masters" && (
         <section className="panel no-print">
           <h2>請求先マスター</h2>
@@ -845,6 +858,26 @@ export default function BillingWorkspace({
       )}
       {tab === "check" && (
         <>
+          {unpaidLines(data).some((l) => {
+            const p = data.billingParties?.find(
+              (p) => p.id === lineParty(data, l),
+            );
+            return (
+              p &&
+              l.actual_day < billingPeriod(month, p).start &&
+              (!party || p.id === party)
+            );
+          }) && (
+            <section className="panel no-print alert">
+              <strong>過去の未請求実績があります</strong>
+              <p>
+                「未請求・統合請求」で明細を確認し、今回請求するものだけを選択してください。
+              </p>
+              <button onClick={() => setTab("plan")}>
+                未請求・統合請求を開く
+              </button>
+            </section>
+          )}
           <section className="panel no-print">
             <label className="field">
               チェックする請求先

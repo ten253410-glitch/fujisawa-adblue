@@ -30,6 +30,7 @@ export type LocalActual = {
   confirmed_at: string;
 };
 export type LocalSale = {
+  pending_billing?: import("./billing-plan").PendingBilling;
   billing_party_id?: string | null;
   transaction_category?: import("./billing").TransactionCategory;
   invoice_on?: string;
